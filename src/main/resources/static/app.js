@@ -6,7 +6,6 @@ const requestTimeout = 5000;
 let currentPrice = 5000;
 let initialStock = 0;
 let currentUser = null;
-const credentialsKey = 'cremo.credentials';
 
 function setConnectionStatus(online) {
     const status = $('connectionStatus');
@@ -24,9 +23,7 @@ async function apiRequest(url, options = {}) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), requestTimeout);
         try {
-            const credentials = sessionStorage.getItem(credentialsKey);
             const headers = { ...(options.headers || {}) };
-            if (credentials) headers.Authorization = `Basic ${credentials}`;
             const response = await fetch(url, { ...options, headers, signal: controller.signal });
             clearTimeout(timeout);
             if (response.ok) setConnectionStatus(true);
@@ -152,7 +149,11 @@ async function refresh() {
 }
 
 async function startSession(username, password) {
-    sessionStorage.setItem(credentialsKey, btoa(`${username}:${password}`));
+    await apiRequest('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
     const response = await apiRequest('/api/auth/me');
     currentUser = await response.json();
     $('loginView').hidden = true;
@@ -172,14 +173,12 @@ $('loginForm').addEventListener('submit', async event => {
         await startSession($('loginUsername').value.trim(), $('loginPassword').value);
         showFeedback($('loginFeedback'), '');
     } catch (error) {
-        sessionStorage.removeItem(credentialsKey);
         showFeedback($('loginFeedback'), 'Usuario o contraseña incorrectos.', true);
     }
 });
 
-$('logoutButton').addEventListener('click', () => {
-    sessionStorage.removeItem(credentialsKey);
-    window.location.reload();
+$('logoutButton').addEventListener('click', async () => {
+    try { await apiRequest('/api/auth/logout', { method: 'POST' }); } finally { window.location.reload(); }
 });
 
 $('sellerForm').addEventListener('submit', async event => {
@@ -241,7 +240,5 @@ $('priceForm').addEventListener('submit', async event => {
 $('refreshButton').addEventListener('click', refresh);
 window.addEventListener('online', refresh);
 updateClock();
-const savedCredentials = sessionStorage.getItem(credentialsKey);
-if (savedCredentials) startSession('', '').catch(() => sessionStorage.removeItem(credentialsKey));
 setInterval(updateClock, 30000);
 setInterval(() => { if (currentUser) refresh(); }, 15000);
