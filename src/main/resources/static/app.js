@@ -148,14 +148,8 @@ async function refresh() {
     }
 }
 
-async function startSession(username, password) {
-    await apiRequest('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-    const response = await apiRequest('/api/auth/me');
-    currentUser = await response.json();
+function showAuthenticatedApp(user) {
+    currentUser = user;
     $('loginView').hidden = true;
     $('appShell').hidden = false;
     $('userControls').hidden = false;
@@ -164,6 +158,16 @@ async function startSession(username, password) {
     $('adminReports').hidden = currentUser.role !== 'ADMIN';
     $('adminMetrics').hidden = currentUser.role !== 'ADMIN';
     $('adminSellers').hidden = currentUser.role !== 'ADMIN';
+}
+
+async function startSession(username, password) {
+    await apiRequest('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    const response = await apiRequest('/api/auth/me');
+    showAuthenticatedApp(await response.json());
     await refresh();
 }
 
@@ -240,5 +244,9 @@ $('priceForm').addEventListener('submit', async event => {
 $('refreshButton').addEventListener('click', refresh);
 window.addEventListener('online', refresh);
 updateClock();
+apiRequest('/api/auth/me')
+    .then(response => response.json())
+    .then(async user => { showAuthenticatedApp(user); await refresh(); })
+    .catch(() => { });
 setInterval(updateClock, 30000);
 setInterval(() => { if (currentUser) refresh(); }, 15000);
