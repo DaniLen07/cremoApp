@@ -37,6 +37,8 @@ Abre http://localhost:8080/ en el PC.
 
 Al iniciar sesión, el administrador puede gestionar inventario, precio, reportes y ventas. El vendedor solo puede registrar ventas. Las credenciales se configuran con las variables `APP_ADMIN_*` y `APP_SELLER_*`; cambia siempre las claves predeterminadas antes de desplegar.
 
+La aplicación limpia automáticamente las ventas y los inventarios cada 3 días de funcionamiento. El producto y su precio se conservan para poder continuar operando. El intervalo puede cambiarse con `DATA_RESET_INTERVAL_MS` si el despliegue necesita otro periodo.
+
 ## Abrir desde un celular en la misma red
 
 1. Obtiene la IP local del PC con `ipconfig` (por ejemplo, `192.168.1.25`).

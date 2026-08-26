@@ -51,7 +51,7 @@ public class CremoService {
         Product product = getProduct();
         LocalDate today = LocalDate.now(COLOMBIA);
         return inventoryRepository.findByProductIdAndInventoryDate(product.getId(), today)
-            .orElseGet(() -> inventoryRepository.save(new DailyInventory(product, today, 0)));
+                .orElseGet(() -> inventoryRepository.save(new DailyInventory(product, today, 0)));
     }
 
     @Transactional
@@ -59,7 +59,7 @@ public class CremoService {
         Product product = getProduct();
         LocalDate today = LocalDate.now(COLOMBIA);
         DailyInventory inventory = inventoryRepository.findByProductIdAndInventoryDate(product.getId(), today)
-            .orElseGet(() -> new DailyInventory(product, today, request.quantity()));
+                .orElseGet(() -> new DailyInventory(product, today, request.quantity()));
         inventory.setInitialQuantity(request.quantity());
         inventory.setAvailableQuantity(request.quantity());
         return inventoryRepository.save(inventory);
@@ -122,5 +122,11 @@ public class CremoService {
         Product product = getProduct();
         product.setPrice(request.price());
         return productRepository.save(product);
+    }
+
+    @Transactional
+    public void resetOperationalData() {
+        saleRepository.deleteAllInBatch();
+        inventoryRepository.deleteAllInBatch();
     }
 }
