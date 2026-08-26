@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -161,8 +161,7 @@ public class CremoService {
     }
 
     @Transactional
-    public void resetOperationalData() {
+    public void resetSalesData() {
         saleRepository.deleteAllInBatch();
-        inventoryRepository.deleteAllInBatch();
     }
 }

@@ -12,7 +12,7 @@ public class DataCleanupScheduler {
     }
 
     @Scheduled(fixedDelayString = "${app.data-reset.interval-ms:259200000}", initialDelayString = "${app.data-reset.interval-ms:259200000}")
-    public void resetOperationalData() {
-        cremoService.resetOperationalData();
+    public void resetSalesData() {
+        cremoService.resetSalesData();
     }
 }
