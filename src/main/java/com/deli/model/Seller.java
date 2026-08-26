@@ -60,4 +60,18 @@ public class Seller {
     public boolean isActive() {
         return active;
     }
+
+    public void update(String name, String phone, String username) {
+        this.name = name;
+        this.phone = phone;
+        this.username = username;
+    }
+
+    public void updatePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void deactivate() {
+        this.active = false;
+    }
 }

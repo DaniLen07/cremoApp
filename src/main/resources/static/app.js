@@ -121,7 +121,7 @@ async function loadSellers() {
         + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
     const statsByName = new Map(stats.map(item => [item.sellerName, item]));
     $('sellerList').innerHTML = sellers.length
-        ? `<div class="seller-table-wrap"><table><thead><tr><th>Vendedor</th><th>Contacto</th><th>Unidades hoy</th><th>Total vendido hoy</th></tr></thead><tbody>${sellers.map(seller => { const item = statsByName.get(seller.name) || {}; return `<tr><td><strong>${seller.name}</strong><small>${seller.username}</small></td><td>${seller.phone}</td><td>${item.units || 0}</td><td>${money(item.total)}</td></tr>`; }).join('')}</tbody></table></div>`
+        ? `<div class="seller-table-wrap"><table><thead><tr><th>Vendedor</th><th>Contacto</th><th>Unidades hoy</th><th>Total vendido hoy</th><th>Acciones</th></tr></thead><tbody>${sellers.map(seller => { const item = statsByName.get(seller.name) || {}; return `<tr><td><strong>${seller.name}</strong><small>${seller.username}</small></td><td>${seller.phone}</td><td>${item.units || 0}</td><td>${money(item.total)}</td><td class="seller-actions"><button type="button" class="text-button edit-seller" data-id="${seller.id}">Editar</button><button type="button" class="text-button delete-seller" data-id="${seller.id}" data-name="${seller.name}">Eliminar</button></td></tr>`; }).join('')}</tbody></table></div>`
         : '<p class="empty-state">Aún no hay vendedores registrados.</p>';
 }
 
@@ -171,6 +171,41 @@ $('sellerForm').addEventListener('submit', async event => {
     } catch (error) {
         showFeedback($('sellerFeedback'), error.message, true);
     }
+});
+
+$('sellerList').addEventListener('click', event => {
+    const editButton = event.target.closest('.edit-seller');
+    const deleteButton = event.target.closest('.delete-seller');
+    if (editButton) {
+        const row = editButton.closest('tr');
+        $('sellerEditId').value = editButton.dataset.id;
+        $('sellerEditName').value = row.cells[0].querySelector('strong').textContent;
+        $('sellerEditUsername').value = row.cells[0].querySelector('small').textContent;
+        $('sellerEditPhone').value = row.cells[1].textContent;
+        $('sellerEditPassword').value = '';
+        $('sellerEditFeedback').textContent = '';
+        $('sellerEditForm').hidden = false;
+        $('sellerEditForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (deleteButton && window.confirm(`¿Eliminar a ${deleteButton.dataset.name}?`)) {
+        apiRequest(`/api/sellers/${deleteButton.dataset.id}`, { method: 'DELETE' })
+            .then(loadSellers)
+            .catch(error => showFeedback($('sellerFeedback'), error.message, true));
+    }
+});
+
+$('cancelSellerEdit').addEventListener('click', () => { $('sellerEditForm').hidden = true; });
+$('sellerEditForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        await apiRequest(`/api/sellers/${$('sellerEditId').value}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: $('sellerEditName').value.trim(), phone: $('sellerEditPhone').value.trim(), username: $('sellerEditUsername').value.trim(), password: $('sellerEditPassword').value })
+        });
+        $('sellerEditForm').hidden = true;
+        showFeedback($('sellerFeedback'), 'Vendedor actualizado correctamente.');
+        await loadSellers();
+    } catch (error) { showFeedback($('sellerEditFeedback'), error.message, true); }
 });
 
 $('decreaseQuantity').addEventListener('click', () => setQuantity(Number($('quantity').value) - 1));

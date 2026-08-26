@@ -120,6 +120,20 @@
                     <button class="secondary-button" type="submit">Guardar vendedor</button>
                     <p class="feedback" id="sellerFeedback" role="status"></p>
                 </form>
+                <form id="sellerEditForm" class="seller-edit-form" hidden>
+                    <input id="sellerEditId" type="hidden">
+                    <p class="eyebrow">Editar vendedor</p>
+                    <label>Nombre<input id="sellerEditName" type="text" maxlength="120" required></label>
+                    <label>Telefono<input id="sellerEditPhone" type="tel" maxlength="30" required></label>
+                    <label>Usuario<input id="sellerEditUsername" type="text" minlength="3" maxlength="60"
+                            required></label>
+                    <label>Nueva contraseña<input id="sellerEditPassword" type="password" minlength="8" maxlength="100"
+                            placeholder="Dejar vacía para conservarla"></label>
+                    <div class="seller-edit-actions"><button class="secondary-button" type="submit">Guardar
+                            cambios</button><button id="cancelSellerEdit" class="text-button"
+                            type="button">Cancelar</button></div>
+                    <p class="feedback" id="sellerEditFeedback" role="status"></p>
+                </form>
                 <div id="sellerList" class="seller-list"></div>
             </section>
         </div>

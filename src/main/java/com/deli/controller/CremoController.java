@@ -11,7 +11,9 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.security.web.context.SecurityContextRepository;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -25,6 +27,7 @@ import com.deli.dto.PriceRequest;
 import com.deli.dto.SaleRequest;
 import com.deli.dto.SellerDailySummary;
 import com.deli.dto.SellerRequest;
+import com.deli.dto.SellerUpdateRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
 import com.deli.model.Sale;
@@ -102,6 +105,17 @@ public class CremoController {
     @ResponseStatus(HttpStatus.CREATED)
     public Seller registerSeller(@Valid @RequestBody SellerRequest request) {
         return service.registerSeller(request);
+    }
+
+    @PutMapping("/sellers/{id}")
+    public Seller updateSeller(@PathVariable Long id, @Valid @RequestBody SellerUpdateRequest request) {
+        return service.updateSeller(id, request);
+    }
+
+    @DeleteMapping("/sellers/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSeller(@PathVariable Long id) {
+        service.deleteSeller(id);
     }
 
     @GetMapping("/dashboard")

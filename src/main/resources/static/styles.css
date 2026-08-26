@@ -177,6 +177,31 @@ body {
     font-weight: 400;
 }
 
+.seller-edit-form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 24px;
+    padding: 20px;
+    background: var(--soft);
+}
+
+.seller-edit-form .eyebrow,
+.seller-edit-actions,
+.seller-edit-form .feedback {
+    grid-column: 1 / -1;
+}
+
+.seller-edit-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.seller-actions {
+    white-space: nowrap;
+}
+
 .seller-row {
     display: flex;
     justify-content: space-between;
@@ -651,6 +676,10 @@ td:last-child {
     }
 
     .seller-form {
+        grid-template-columns: 1fr;
+    }
+
+    .seller-edit-form {
         grid-template-columns: 1fr;
     }
 

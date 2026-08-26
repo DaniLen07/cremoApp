@@ -22,6 +22,7 @@ import com.deli.dto.PriceRequest;
 import com.deli.dto.SaleRequest;
 import com.deli.dto.SellerDailySummary;
 import com.deli.dto.SellerRequest;
+import com.deli.dto.SellerUpdateRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
 import com.deli.model.Sale;
@@ -188,6 +189,40 @@ public class CremoService {
         }
         return sellerRepository.save(new Seller(name, request.phone().trim(), username,
                 passwordEncoder.encode(request.password())));
+    }
+
+    @Transactional
+    public Seller updateSeller(Long id, SellerUpdateRequest request) {
+        Seller seller = sellerRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vendedor no encontrado"));
+        String username = request.username().trim();
+        String name = request.name().trim();
+        if (username.equalsIgnoreCase(adminUsername) || username.equalsIgnoreCase(fallbackSellerUsername)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese usuario esta reservado");
+        }
+        if (sellerRepository.existsByUsernameIgnoreCaseAndIdNot(username, id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese usuario ya esta registrado");
+        }
+        if (sellerRepository.existsByNameIgnoreCase(name) && !seller.getName().equalsIgnoreCase(name)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese vendedor ya esta registrado");
+        }
+        seller.update(name, request.phone().trim(), username);
+        if (request.password() != null && !request.password().isBlank()) {
+            if (request.password().length() < 8) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                        "La contraseña debe tener al menos 8 caracteres");
+            }
+            seller.updatePassword(passwordEncoder.encode(request.password()));
+        }
+        return sellerRepository.save(seller);
+    }
+
+    @Transactional
+    public void deleteSeller(Long id) {
+        Seller seller = sellerRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vendedor no encontrado"));
+        seller.deactivate();
+        sellerRepository.save(seller);
     }
 
     @Transactional
