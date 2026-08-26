@@ -1,0 +1,121 @@
+package com.deli.service;
+
+import java.math.BigDecimal;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
+
+import com.deli.dto.InventoryRequest;
+import com.deli.dto.PriceRequest;
+import com.deli.dto.SaleRequest;
+import com.deli.model.DailyInventory;
+import com.deli.model.Product;
+import com.deli.model.Sale;
+import com.deli.repository.InventoryRepository;
+import com.deli.repository.ProductRepository;
+import com.deli.repository.SaleRepository;
+
+@Service
+public class CremoService {
+    private static final Set<String> SELLER_NAMES = Set.of(
+            "Juan Diego", "Christopher", "Salomé", "Daniel", "Luisa", "Otro");
+
+    private final ProductRepository productRepository;
+    private final InventoryRepository inventoryRepository;
+    private final SaleRepository saleRepository;
+
+    public CremoService(ProductRepository productRepository, InventoryRepository inventoryRepository,
+            SaleRepository saleRepository) {
+        this.productRepository = productRepository;
+        this.inventoryRepository = inventoryRepository;
+        this.saleRepository = saleRepository;
+    }
+
+    public Product getProduct() {
+        return productRepository.findFirstByActiveTrueOrderByIdAsc()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay producto configurado"));
+    }
+
+    public DailyInventory getTodayInventory() {
+        Product product = getProduct();
+        return inventoryRepository.findByProductIdAndInventoryDate(product.getId(), LocalDate.now())
+                .orElseGet(() -> inventoryRepository.save(new DailyInventory(product, LocalDate.now(), 0)));
+    }
+
+    @Transactional
+    public DailyInventory updateInventory(InventoryRequest request) {
+        Product product = getProduct();
+        DailyInventory inventory = inventoryRepository.findByProductIdAndInventoryDate(product.getId(), LocalDate.now())
+                .orElseGet(() -> new DailyInventory(product, LocalDate.now(), request.quantity()));
+        inventory.setInitialQuantity(request.quantity());
+        inventory.setAvailableQuantity(request.quantity());
+        return inventoryRepository.save(inventory);
+    }
+
+    @Transactional
+    public Sale createSale(SaleRequest request) {
+        if (request.paymentMethod() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona un medio de pago");
+        }
+
+        String sellerName = request.sellerName() == null ? "No especificado" : request.sellerName().trim();
+        if (!SELLER_NAMES.contains(sellerName)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona un vendedor válido");
+        }
+
+        Product product = getProduct();
+        DailyInventory inventory = getTodayInventory();
+        if (inventory.getAvailableQuantity() < request.quantity()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay inventario suficiente para esta venta");
+        }
+        inventory.setAvailableQuantity(inventory.getAvailableQuantity() - request.quantity());
+        inventoryRepository.save(inventory);
+        return saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName));
+    }
+
+    public Map<String, Object> dashboard() {
+        LocalDate today = LocalDate.now();
+        DailyInventory inventory = getTodayInventory();
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("product", getProduct());
+        result.put("inventory", inventory);
+        result.put("todayUnits", saleRepository.totalUnitsByDate(today));
+        result.put("todayTotal", saleRepository.totalAmountByDate(today));
+        result.put("recentSales", saleRepository.findTop20ByOrderByCreatedAtDesc());
+        return result;
+    }
+
+    public List<Sale> weeklySales() {
+        LocalDate end = LocalDate.now();
+        LocalDate start = end.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        return saleRepository.findBySaleDateBetweenOrderByCreatedAtDesc(start, end);
+    }
+
+    public Map<String, Object> weeklyReport() {
+        List<Sale> sales = weeklySales();
+        BigDecimal total = sales.stream().map(Sale::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        int units = sales.stream().mapToInt(Sale::getQuantity).sum();
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("start", LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)));
+        report.put("end", LocalDate.now());
+        report.put("units", units);
+        report.put("total", total);
+        report.put("sales", sales);
+        return report;
+    }
+
+    public Product updatePrice(PriceRequest request) {
+        Product product = getProduct();
+        product.setPrice(request.price());
+        return productRepository.save(product);
+    }
+}

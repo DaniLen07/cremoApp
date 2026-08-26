@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cremo | Gestión de ventas</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">C</span><span>CREMO</span></div>
+        <div class="topbar-meta" id="connectionStatus"><span class="status-dot"></span> Conectando...</div>
+    </header>
+
+    <main class="page-shell">
+        <section class="intro">
+            <div>
+                <p class="eyebrow">Panel de operaciones</p>
+                <h1>Arroz con leche,<br><em>hecho simple.</em></h1>
+                <p class="intro-copy">Controla el inventario y registra cada venta desde un solo lugar.</p>
+            </div>
+            <div class="date-card"><span id="currentDate"></span><strong id="currentTime"></strong></div>
+        </section>
+
+        <section class="metrics" aria-label="Resumen del día">
+            <article class="metric-card metric-dark"><span>Disponible hoy</span><strong
+                    id="inventoryValue">0</strong><small>unidades</small></article>
+            <article class="metric-card"><span>Unidades vendidas</span><strong
+                    id="unitsValue">0</strong><small>hoy</small></article>
+            <article class="metric-card"><span>Ingresos del día</span><strong id="revenueValue">$0</strong><small>pesos
+                    colombianos</small></article>
+            <article class="metric-card"><span>Precio actual</span><strong id="priceValue">$5.000</strong><small>por
+                    unidad</small></article>
+        </section>
+
+        <div class="content-grid">
+            <section class="panel sale-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Nueva operación</p>
+                        <h2>Registrar venta</h2>
+                    </div><span class="panel-number">01</span>
+                </div>
+                <form id="saleForm">
+                    <label>Cantidad <input id="quantity" name="quantity" type="number" min="1" value="1"
+                            required></label>
+                    <label>Nombre del vendedor
+                        <select id="sellerName" name="sellerName" required>
+                            <option value="" selected disabled>Selecciona un vendedor</option>
+                            <option>Juan Diego</option>
+                            <option>Christopher</option>
+                            <option>Salomé</option>
+                            <option>Daniel</option>
+                            <option>Luisa</option>
+                            <option>Otro</option>
+                        </select>
+                    </label>
+                    <fieldset>
+                        <legend>Medio de pago</legend>
+                        <div class="payment-options">
+                            <label class="payment-option"><input type="radio" name="paymentMethod" value="EFECTIVO"
+                                    checked><span>Efectivo</span></label>
+                            <label class="payment-option"><input type="radio" name="paymentMethod"
+                                    value="NEQUI"><span>Nequi</span></label>
+                        </div>
+                    </fieldset>
+                    <div class="sale-total"><span>Total de la venta</span><strong id="saleTotal">$5.000</strong></div>
+                    <button class="primary-button" type="submit">Confirmar venta <span>→</span></button>
+                    <p class="feedback" id="saleFeedback" role="status"></p>
+                </form>
+            </section>
+
+            <section class="panel inventory-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Control diario</p>
+                        <h2>Inventario</h2>
+                    </div><span class="panel-number">02</span>
+                </div>
+                <form id="inventoryForm" class="inline-form"><label>Unidades disponibles<input id="inventoryInput"
+                            type="number" min="0" required></label><button class="secondary-button"
+                        type="submit">Actualizar</button></form>
+                <div class="stock-visual">
+                    <div class="stock-header"><span>Estado del inventario</span><strong id="stockPercent">0%</strong>
+                    </div>
+                    <div class="stock-track">
+                        <div id="stockBar"></div>
+                    </div>
+                    <p id="stockMessage">Carga el inventario del día para comenzar.</p>
+                </div>
+                <div class="price-editor">
+                    <div><span class="eyebrow">Precio unitario</span><strong id="priceEditorValue">$5.000</strong></div>
+                    <form id="priceForm"><input id="priceInput" type="number" min="1" step="1" value="5000"
+                            required><button class="icon-button" title="Guardar precio"
+                            aria-label="Guardar precio">✓</button></form>
+                </div>
+                <p class="feedback" id="inventoryFeedback" role="status"></p>
+            </section>
+        </div>
+
+        <section class="panel reports-panel">
+            <div class="panel-heading">
+                <div>
+                    <p class="eyebrow">Seguimiento</p>
+                    <h2>Resumen semanal</h2>
+                </div><button id="refreshButton" class="text-button" type="button">Actualizar datos ↻</button>
+            </div>
+            <div class="report-summary">
+                <div><span>Periodo</span><strong id="reportPeriod">Esta semana</strong></div>
+                <div><span>Unidades</span><strong id="reportUnits">0</strong></div>
+                <div><span>Ventas</span><strong id="reportTotal">$0</strong></div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Vendedor</th>
+                            <th>Cantidad</th>
+                            <th>Medio de pago</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTable">
+                        <tr>
+                            <td colspan="6" class="empty-state">Aún no hay ventas registradas.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="/app.js"></script>
+</body>
+
+</html>
