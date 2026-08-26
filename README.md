@@ -37,6 +37,8 @@ Abre http://localhost:8080/ en el PC.
 
 Al iniciar sesión, el administrador puede gestionar inventario, precio, reportes y ventas. El vendedor solo puede registrar ventas. Las credenciales se configuran con las variables `APP_ADMIN_*` y `APP_SELLER_*`; cambia siempre las claves predeterminadas antes de desplegar.
 
+El administrador puede registrar vendedores desde el panel de equipo con nombre, teléfono, usuario y contraseña. Los vendedores registrados se guardan en MySQL, aparecen en el selector de ventas y pueden iniciar sesión inmediatamente sin reiniciar la aplicación. Las contraseñas se almacenan cifradas y nunca se muestran.
+
 La aplicación limpia automáticamente las ventas y los inventarios cada 3 días de funcionamiento. El producto y su precio se conservan para poder continuar operando. El intervalo puede cambiarse con `DATA_RESET_INTERVAL_MS` si el despliegue necesita otro periodo.
 
 ## Abrir desde un celular en la misma red

@@ -113,6 +113,19 @@ async function loadSellerPrice() {
     updateSaleTotal();
 }
 
+async function loadSellers() {
+    const response = await apiRequest('/api/sellers');
+    const sellers = await response.json();
+    const select = $('sellerName');
+    select.innerHTML = '<option value="" selected disabled>Selecciona un vendedor</option>'
+        + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
+    if (currentUser.role === 'ADMIN') {
+        $('sellerList').innerHTML = sellers.length
+            ? sellers.map(seller => `<div class="seller-row"><strong>${seller.name}</strong><span>${seller.phone} · ${seller.username}</span></div>`).join('')
+            : '<p class="empty-state">Aún no hay vendedores registrados.</p>';
+    }
+}
+
 async function loadReport() {
     let report;
     try {
@@ -130,8 +143,8 @@ async function loadReport() {
 
 async function refresh() {
     const results = currentUser.role === 'ADMIN'
-        ? await Promise.allSettled([loadDashboard(), loadReport()])
-        : await Promise.allSettled([loadSellerPrice()]);
+        ? await Promise.allSettled([loadDashboard(), loadReport(), loadSellers()])
+        : await Promise.allSettled([loadSellerPrice(), loadSellers()]);
     updateSaleTotal();
     if (results.some(result => result.status === 'rejected')) {
         showFeedback($('saleFeedback'), 'Sin conexion. Mostrando los ultimos datos guardados.', true);
@@ -149,6 +162,7 @@ async function startSession(username, password) {
     $('adminInventory').hidden = currentUser.role !== 'ADMIN';
     $('adminReports').hidden = currentUser.role !== 'ADMIN';
     $('adminMetrics').hidden = currentUser.role !== 'ADMIN';
+    $('adminSellers').hidden = currentUser.role !== 'ADMIN';
     await refresh();
 }
 
@@ -166,6 +180,27 @@ $('loginForm').addEventListener('submit', async event => {
 $('logoutButton').addEventListener('click', () => {
     sessionStorage.removeItem(credentialsKey);
     window.location.reload();
+});
+
+$('sellerForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        await apiRequest('/api/sellers', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: $('sellerRegisterName').value.trim(),
+                phone: $('sellerPhone').value.trim(),
+                username: $('sellerUsername').value.trim(),
+                password: $('sellerPassword').value
+            })
+        });
+        event.target.reset();
+        showFeedback($('sellerFeedback'), 'Vendedor registrado correctamente.');
+        await loadSellers();
+    } catch (error) {
+        showFeedback($('sellerFeedback'), error.message, true);
+    }
 });
 
 $('decreaseQuantity').addEventListener('click', () => setQuantity(Number($('quantity').value) - 1));

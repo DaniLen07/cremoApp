@@ -12,7 +12,8 @@
     <header class="topbar">
         <div class="brand"><span class="brand-mark">C</span><span>CREMO</span></div>
         <div class="topbar-meta" id="connectionStatus"><span class="status-dot"></span> Conectando...</div>
-        <div id="userControls" class="user-controls" hidden><span id="userLabel"></span><button id="logoutButton" type="button">Salir</button></div>
+        <div id="userControls" class="user-controls" hidden><span id="userLabel"></span><button id="logoutButton"
+                type="button">Salir</button></div>
     </header>
 
     <section id="loginView" class="login-view">
@@ -56,8 +57,11 @@
                     </div><span class="panel-number">01</span>
                 </div>
                 <form id="saleForm">
-                        <label>Cantidad</label>
-                        <div class="quantity-control"><button type="button" class="quantity-button" id="decreaseQuantity" aria-label="Disminuir cantidad">−</button><input id="quantity" name="quantity" type="number" min="1" value="1" required><button type="button" class="quantity-button" id="increaseQuantity" aria-label="Aumentar cantidad">+</button></div>
+                    <label>Cantidad</label>
+                    <div class="quantity-control"><button type="button" class="quantity-button" id="decreaseQuantity"
+                            aria-label="Disminuir cantidad">−</button><input id="quantity" name="quantity" type="number"
+                            min="1" value="1" required><button type="button" class="quantity-button"
+                            id="increaseQuantity" aria-label="Aumentar cantidad">+</button></div>
                     <label>Nombre del vendedor
                         <select id="sellerName" name="sellerName" required>
                             <option value="" selected disabled>Selecciona un vendedor</option>
@@ -109,6 +113,24 @@
                             aria-label="Guardar precio">✓</button></form>
                 </div>
                 <p class="feedback" id="inventoryFeedback" role="status"></p>
+            </section>
+
+            <section id="adminSellers" class="panel seller-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Equipo</p>
+                        <h2>Registrar vendedor</h2>
+                    </div><span class="panel-number">03</span>
+                </div>
+                <form id="sellerForm" class="seller-form">
+                    <label>Nombre<input id="sellerRegisterName" type="text" maxlength="120" required></label>
+                    <label>Telefono<input id="sellerPhone" type="tel" maxlength="30" required></label>
+                    <label>Usuario<input id="sellerUsername" type="text" minlength="3" maxlength="60" required></label>
+                    <label>Contraseña<input id="sellerPassword" type="password" minlength="8" maxlength="100" required></label>
+                    <button class="secondary-button" type="submit">Guardar vendedor</button>
+                    <p class="feedback" id="sellerFeedback" role="status"></p>
+                </form>
+                <div id="sellerList" class="seller-list"></div>
             </section>
         </div>
 

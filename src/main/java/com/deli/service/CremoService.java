@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,12 +20,15 @@ import org.springframework.web.server.ResponseStatusException;
 import com.deli.dto.InventoryRequest;
 import com.deli.dto.PriceRequest;
 import com.deli.dto.SaleRequest;
+import com.deli.dto.SellerRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
 import com.deli.model.Sale;
+import com.deli.model.Seller;
 import com.deli.repository.InventoryRepository;
 import com.deli.repository.ProductRepository;
 import com.deli.repository.SaleRepository;
+import com.deli.repository.SellerRepository;
 
 @Service
 public class CremoService {
@@ -34,12 +39,22 @@ public class CremoService {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final SaleRepository saleRepository;
+    private final SellerRepository sellerRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final String adminUsername;
+    private final String fallbackSellerUsername;
 
     public CremoService(ProductRepository productRepository, InventoryRepository inventoryRepository,
-            SaleRepository saleRepository) {
+            SaleRepository saleRepository, SellerRepository sellerRepository, PasswordEncoder passwordEncoder,
+            @Value("${APP_ADMIN_USERNAME:admin}") String adminUsername,
+            @Value("${APP_SELLER_USERNAME:vendedor}") String fallbackSellerUsername) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.saleRepository = saleRepository;
+        this.sellerRepository = sellerRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.adminUsername = adminUsername;
+        this.fallbackSellerUsername = fallbackSellerUsername;
     }
 
     public Product getProduct() {
@@ -72,7 +87,7 @@ public class CremoService {
         }
 
         String sellerName = request.sellerName() == null ? "No especificado" : request.sellerName().trim();
-        if (!SELLER_NAMES.contains(sellerName)) {
+        if (!SELLER_NAMES.contains(sellerName) && !sellerRepository.existsByNameIgnoreCase(sellerName)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona un vendedor válido");
         }
 
@@ -122,6 +137,27 @@ public class CremoService {
         Product product = getProduct();
         product.setPrice(request.price());
         return productRepository.save(product);
+    }
+
+    public List<Seller> getSellers() {
+        return sellerRepository.findByActiveTrueOrderByNameAsc();
+    }
+
+    @Transactional
+    public Seller registerSeller(SellerRequest request) {
+        String username = request.username().trim();
+        String name = request.name().trim();
+        if (username.equalsIgnoreCase(adminUsername) || username.equalsIgnoreCase(fallbackSellerUsername)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese usuario esta reservado");
+        }
+        if (sellerRepository.existsByUsernameIgnoreCase(username)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese usuario ya esta registrado");
+        }
+        if (sellerRepository.existsByNameIgnoreCase(name)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese vendedor ya esta registrado");
+        }
+        return sellerRepository.save(new Seller(name, request.phone().trim(), username,
+                passwordEncoder.encode(request.password())));
     }
 
     @Transactional

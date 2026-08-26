@@ -3,9 +3,11 @@ package com.deli.controller;
 import com.deli.dto.InventoryRequest;
 import com.deli.dto.PriceRequest;
 import com.deli.dto.SaleRequest;
+import com.deli.dto.SellerRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
 import com.deli.model.Sale;
+import com.deli.model.Seller;
 import com.deli.service.CremoService;
 import jakarta.validation.Valid;
 import java.util.Map;
@@ -42,6 +44,17 @@ public class CremoController {
     @GetMapping("/product/current")
     public Product currentProduct() {
         return service.getProduct();
+    }
+
+    @GetMapping("/sellers")
+    public java.util.List<Seller> sellers() {
+        return service.getSellers();
+    }
+
+    @PostMapping("/sellers")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Seller registerSeller(@Valid @RequestBody SellerRequest request) {
+        return service.registerSeller(request);
     }
 
     @GetMapping("/dashboard")
