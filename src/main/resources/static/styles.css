@@ -135,7 +135,15 @@ body {
     background: var(--soft);
     color: var(--ink);
     font-size: 22px;
+    font-weight: 600;
     cursor: pointer;
+    transition: background-color .2s ease, color .2s ease, transform .15s ease;
+}
+
+.quantity-button:hover,
+.quantity-button.is-active {
+    background: var(--ink);
+    color: #fff;
 }
 
 .seller-panel {
@@ -200,6 +208,28 @@ body {
 
 .seller-actions {
     white-space: nowrap;
+    display: flex;
+    gap: 8px;
+}
+
+.seller-action-button {
+    padding: 8px 11px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    font: 600 11px 'DM Sans';
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease, transform .15s ease;
+}
+
+.seller-action-button:hover {
+    background: var(--ink);
+    color: #fff;
+}
+
+.seller-action-button.delete-seller:hover {
+    border-color: #a44b4b;
+    background: #a44b4b;
 }
 
 .seller-row {
@@ -454,6 +484,31 @@ fieldset {
     border: 0;
     cursor: pointer;
     font: 600 12px 'DM Sans';
+    transition: background-color .2s ease, color .2s ease, transform .15s ease, box-shadow .2s ease;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.icon-button:hover {
+    background: #3b3b38;
+    box-shadow: 0 5px 12px rgba(23, 23, 23, .14);
+}
+
+.primary-button:active,
+.secondary-button:active,
+.icon-button:active,
+.quantity-button:active,
+.text-button:active {
+    transform: translateY(1px) scale(.98);
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.icon-button:focus-visible,
+.quantity-button:focus-visible,
+.text-button:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 3px;
 }
 
 .primary-button {
@@ -690,6 +745,14 @@ td:last-child {
     .seller-row span {
         display: block;
         margin-top: 5px;
+    }
+
+    .seller-actions {
+        white-space: normal;
+    }
+
+    .seller-action-button {
+        margin-top: 4px;
     }
 
     .panel {

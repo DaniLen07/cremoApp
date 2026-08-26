@@ -121,7 +121,7 @@ async function loadSellers() {
         + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
     const statsByName = new Map(stats.map(item => [item.sellerName, item]));
     $('sellerList').innerHTML = sellers.length
-        ? `<div class="seller-table-wrap"><table><thead><tr><th>Vendedor</th><th>Contacto</th><th>Unidades hoy</th><th>Total vendido hoy</th><th>Acciones</th></tr></thead><tbody>${sellers.map(seller => { const item = statsByName.get(seller.name) || {}; return `<tr><td><strong>${seller.name}</strong><small>${seller.username}</small></td><td>${seller.phone}</td><td>${item.units || 0}</td><td>${money(item.total)}</td><td class="seller-actions"><button type="button" class="text-button edit-seller" data-id="${seller.id}">Editar</button><button type="button" class="text-button delete-seller" data-id="${seller.id}" data-name="${seller.name}">Eliminar</button></td></tr>`; }).join('')}</tbody></table></div>`
+        ? `<div class="seller-table-wrap"><table><thead><tr><th>Vendedor</th><th>Contacto</th><th>Unidades hoy</th><th>Total vendido hoy</th><th>Acciones</th></tr></thead><tbody>${sellers.map(seller => { const item = statsByName.get(seller.name) || {}; return `<tr><td><strong>${seller.name}</strong><small>${seller.username}</small></td><td>${seller.phone}</td><td>${item.units || 0}</td><td>${money(item.total)}</td><td class="seller-actions"><button type="button" class="seller-action-button edit-seller" data-id="${seller.id}">Editar</button><button type="button" class="seller-action-button delete-seller" data-id="${seller.id}" data-name="${seller.name}">Eliminar</button></td></tr>`; }).join('')}</tbody></table></div>`
         : '<p class="empty-state">Aún no hay vendedores registrados.</p>';
 }
 
@@ -208,8 +208,8 @@ $('sellerEditForm').addEventListener('submit', async event => {
     } catch (error) { showFeedback($('sellerEditFeedback'), error.message, true); }
 });
 
-$('decreaseQuantity').addEventListener('click', () => setQuantity(Number($('quantity').value) - 1));
-$('increaseQuantity').addEventListener('click', () => setQuantity(Number($('quantity').value) + 1));
+$('decreaseQuantity').addEventListener('click', event => { setQuantity(Number($('quantity').value) - 1); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); });
+$('increaseQuantity').addEventListener('click', event => { setQuantity(Number($('quantity').value) + 1); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); });
 $('quantity').addEventListener('input', updateSaleTotal);
 $('saleForm').addEventListener('submit', async event => {
     event.preventDefault();
