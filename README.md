@@ -21,6 +21,10 @@ $env:DB_NAME="bdDeli"
 $env:DB_USERNAME="root"
 $env:DB_PASSWORD="TU_CONTRASENA_MYSQL"
 $env:DB_SSL="false"
+$env:APP_ADMIN_USERNAME="admin"
+$env:APP_ADMIN_PASSWORD="CAMBIA_ESTA_CLAVE"
+$env:APP_SELLER_USERNAME="vendedor"
+$env:APP_SELLER_PASSWORD="CAMBIA_ESTA_CLAVE"
 ```
 
 4. Inicia la aplicacion:
@@ -30,6 +34,8 @@ mvn spring-boot:run
 ```
 
 Abre http://localhost:8080/ en el PC.
+
+Al iniciar sesión, el administrador puede gestionar inventario, precio, reportes y ventas. El vendedor solo puede registrar ventas. Las credenciales se configuran con las variables `APP_ADMIN_*` y `APP_SELLER_*`; cambia siempre las claves predeterminadas antes de desplegar.
 
 ## Abrir desde un celular en la misma red
 

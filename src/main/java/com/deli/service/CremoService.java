@@ -3,6 +3,7 @@ package com.deli.service;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,7 @@ import com.deli.repository.SaleRepository;
 
 @Service
 public class CremoService {
+    private static final ZoneId COLOMBIA = ZoneId.of("America/Bogota");
     private static final Set<String> SELLER_NAMES = Set.of(
             "Juan Diego", "Christopher", "Salomé", "Daniel", "Luisa", "Otro");
 
@@ -47,15 +49,17 @@ public class CremoService {
 
     public DailyInventory getTodayInventory() {
         Product product = getProduct();
-        return inventoryRepository.findByProductIdAndInventoryDate(product.getId(), LocalDate.now())
-                .orElseGet(() -> inventoryRepository.save(new DailyInventory(product, LocalDate.now(), 0)));
+        LocalDate today = LocalDate.now(COLOMBIA);
+        return inventoryRepository.findByProductIdAndInventoryDate(product.getId(), today)
+            .orElseGet(() -> inventoryRepository.save(new DailyInventory(product, today, 0)));
     }
 
     @Transactional
     public DailyInventory updateInventory(InventoryRequest request) {
         Product product = getProduct();
-        DailyInventory inventory = inventoryRepository.findByProductIdAndInventoryDate(product.getId(), LocalDate.now())
-                .orElseGet(() -> new DailyInventory(product, LocalDate.now(), request.quantity()));
+        LocalDate today = LocalDate.now(COLOMBIA);
+        DailyInventory inventory = inventoryRepository.findByProductIdAndInventoryDate(product.getId(), today)
+            .orElseGet(() -> new DailyInventory(product, today, request.quantity()));
         inventory.setInitialQuantity(request.quantity());
         inventory.setAvailableQuantity(request.quantity());
         return inventoryRepository.save(inventory);
@@ -83,7 +87,7 @@ public class CremoService {
     }
 
     public Map<String, Object> dashboard() {
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(COLOMBIA);
         DailyInventory inventory = getTodayInventory();
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("product", getProduct());
@@ -95,7 +99,7 @@ public class CremoService {
     }
 
     public List<Sale> weeklySales() {
-        LocalDate end = LocalDate.now();
+        LocalDate end = LocalDate.now(COLOMBIA);
         LocalDate start = end.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
         return saleRepository.findBySaleDateBetweenOrderByCreatedAtDesc(start, end);
     }
@@ -105,8 +109,9 @@ public class CremoService {
         BigDecimal total = sales.stream().map(Sale::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
         int units = sales.stream().mapToInt(Sale::getQuantity).sum();
         Map<String, Object> report = new LinkedHashMap<>();
-        report.put("start", LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)));
-        report.put("end", LocalDate.now());
+        LocalDate today = LocalDate.now(COLOMBIA);
+        report.put("start", today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)));
+        report.put("end", today);
         report.put("units", units);
         report.put("total", total);
         report.put("sales", sales);

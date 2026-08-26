@@ -12,9 +12,21 @@
     <header class="topbar">
         <div class="brand"><span class="brand-mark">C</span><span>CREMO</span></div>
         <div class="topbar-meta" id="connectionStatus"><span class="status-dot"></span> Conectando...</div>
+        <div id="userControls" class="user-controls" hidden><span id="userLabel"></span><button id="logoutButton" type="button">Salir</button></div>
     </header>
 
-    <main class="page-shell">
+    <section id="loginView" class="login-view">
+        <form id="loginForm" class="login-panel">
+            <p class="eyebrow">Acceso seguro</p>
+            <h1>Bienvenido a Cremo</h1>
+            <label>Usuario<input id="loginUsername" type="text" autocomplete="username" required></label>
+            <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+            <button class="primary-button" type="submit">Ingresar <span>→</span></button>
+            <p class="feedback" id="loginFeedback" role="alert"></p>
+        </form>
+    </section>
+
+    <main id="appShell" class="page-shell" hidden>
         <section class="intro">
             <div>
                 <p class="eyebrow">Panel de operaciones</p>
@@ -24,7 +36,7 @@
             <div class="date-card"><span id="currentDate"></span><strong id="currentTime"></strong></div>
         </section>
 
-        <section class="metrics" aria-label="Resumen del día">
+        <section id="adminMetrics" class="metrics" aria-label="Resumen del día">
             <article class="metric-card metric-dark"><span>Disponible hoy</span><strong
                     id="inventoryValue">0</strong><small>unidades</small></article>
             <article class="metric-card"><span>Unidades vendidas</span><strong
@@ -44,8 +56,8 @@
                     </div><span class="panel-number">01</span>
                 </div>
                 <form id="saleForm">
-                    <label>Cantidad <input id="quantity" name="quantity" type="number" min="1" value="1"
-                            required></label>
+                        <label>Cantidad</label>
+                        <div class="quantity-control"><button type="button" class="quantity-button" id="decreaseQuantity" aria-label="Disminuir cantidad">−</button><input id="quantity" name="quantity" type="number" min="1" value="1" required><button type="button" class="quantity-button" id="increaseQuantity" aria-label="Aumentar cantidad">+</button></div>
                     <label>Nombre del vendedor
                         <select id="sellerName" name="sellerName" required>
                             <option value="" selected disabled>Selecciona un vendedor</option>
@@ -72,7 +84,7 @@
                 </form>
             </section>
 
-            <section class="panel inventory-panel">
+            <section id="adminInventory" class="panel inventory-panel">
                 <div class="panel-heading">
                     <div>
                         <p class="eyebrow">Control diario</p>
@@ -100,7 +112,7 @@
             </section>
         </div>
 
-        <section class="panel reports-panel">
+        <section id="adminReports" class="panel reports-panel">
             <div class="panel-heading">
                 <div>
                     <p class="eyebrow">Seguimiento</p>

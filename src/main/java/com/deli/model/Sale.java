@@ -12,6 +12,7 @@ import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "sales")
@@ -42,8 +43,9 @@ public class Sale {
         this.quantity = quantity;
         this.unitPrice = product.getPrice();
         this.total = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        this.saleDate = LocalDate.now();
-        this.createdAt = LocalDateTime.now();
+        ZoneId colombia = ZoneId.of("America/Bogota");
+        this.saleDate = LocalDate.now(colombia);
+        this.createdAt = LocalDateTime.now(colombia);
         this.paymentMethod = paymentMethod;
         this.sellerName = sellerName == null || sellerName.isBlank() ? "No especificado" : sellerName.trim();
     }

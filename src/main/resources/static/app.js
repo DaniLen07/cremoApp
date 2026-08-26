@@ -5,6 +5,8 @@ const reportCacheKey = 'cremo.weeklyReport';
 const requestTimeout = 5000;
 let currentPrice = 5000;
 let initialStock = 0;
+let currentUser = null;
+const credentialsKey = 'cremo.credentials';
 
 function setConnectionStatus(online) {
     const status = $('connectionStatus');
@@ -22,7 +24,10 @@ async function apiRequest(url, options = {}) {
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), requestTimeout);
         try {
-            const response = await fetch(url, { ...options, signal: controller.signal });
+            const credentials = sessionStorage.getItem(credentialsKey);
+            const headers = { ...(options.headers || {}) };
+            if (credentials) headers.Authorization = `Basic ${credentials}`;
+            const response = await fetch(url, { ...options, headers, signal: controller.signal });
             clearTimeout(timeout);
             if (response.ok) setConnectionStatus(true);
             if (!response.ok) throw new Error(`Error del servidor (${response.status})`);
@@ -58,6 +63,11 @@ function updateClock() {
 
 function updateSaleTotal() { $('saleTotal').textContent = money(Number($('quantity').value || 0) * currentPrice); }
 
+function setQuantity(value) {
+    $('quantity').value = Math.max(1, Number(value) || 1);
+    updateSaleTotal();
+}
+
 function renderInventory(inventory) {
     const available = inventory.availableQuantity || 0;
     initialStock = Math.max(inventory.initialQuantity || available, available);
@@ -72,7 +82,7 @@ function renderInventory(inventory) {
 function renderSales(sales) {
     const table = $('salesTable');
     if (!sales.length) { table.innerHTML = '<tr><td colspan="6" class="empty-state">Aún no hay ventas registradas.</td></tr>'; return; }
-    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${new Date(sale.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('');
+    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 5) || '--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('');
 }
 
 async function loadDashboard() {
@@ -95,6 +105,14 @@ async function loadDashboard() {
     renderSales(data.recentSales || []);
 }
 
+async function loadSellerPrice() {
+    const response = await apiRequest('/api/product/current');
+    const product = await response.json();
+    currentPrice = Number(product.price);
+    $('priceValue').textContent = money(currentPrice);
+    updateSaleTotal();
+}
+
 async function loadReport() {
     let report;
     try {
@@ -111,13 +129,47 @@ async function loadReport() {
 }
 
 async function refresh() {
-    const results = await Promise.allSettled([loadDashboard(), loadReport()]);
+    const results = currentUser.role === 'ADMIN'
+        ? await Promise.allSettled([loadDashboard(), loadReport()])
+        : await Promise.allSettled([loadSellerPrice()]);
     updateSaleTotal();
     if (results.some(result => result.status === 'rejected')) {
         showFeedback($('saleFeedback'), 'Sin conexion. Mostrando los ultimos datos guardados.', true);
     }
 }
 
+async function startSession(username, password) {
+    sessionStorage.setItem(credentialsKey, btoa(`${username}:${password}`));
+    const response = await apiRequest('/api/auth/me');
+    currentUser = await response.json();
+    $('loginView').hidden = true;
+    $('appShell').hidden = false;
+    $('userControls').hidden = false;
+    $('userLabel').textContent = `${currentUser.username} · ${currentUser.role === 'ADMIN' ? 'Administrador' : 'Vendedor'}`;
+    $('adminInventory').hidden = currentUser.role !== 'ADMIN';
+    $('adminReports').hidden = currentUser.role !== 'ADMIN';
+    $('adminMetrics').hidden = currentUser.role !== 'ADMIN';
+    await refresh();
+}
+
+$('loginForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        await startSession($('loginUsername').value.trim(), $('loginPassword').value);
+        showFeedback($('loginFeedback'), '');
+    } catch (error) {
+        sessionStorage.removeItem(credentialsKey);
+        showFeedback($('loginFeedback'), 'Usuario o contraseña incorrectos.', true);
+    }
+});
+
+$('logoutButton').addEventListener('click', () => {
+    sessionStorage.removeItem(credentialsKey);
+    window.location.reload();
+});
+
+$('decreaseQuantity').addEventListener('click', () => setQuantity(Number($('quantity').value) - 1));
+$('increaseQuantity').addEventListener('click', () => setQuantity(Number($('quantity').value) + 1));
 $('quantity').addEventListener('input', updateSaleTotal);
 $('saleForm').addEventListener('submit', async event => {
     event.preventDefault();
@@ -153,4 +205,8 @@ $('priceForm').addEventListener('submit', async event => {
 
 $('refreshButton').addEventListener('click', refresh);
 window.addEventListener('online', refresh);
-updateClock(); setInterval(updateClock, 30000); setInterval(refresh, 15000); refresh();
+updateClock();
+const savedCredentials = sessionStorage.getItem(credentialsKey);
+if (savedCredentials) startSession('', '').catch(() => sessionStorage.removeItem(credentialsKey));
+setInterval(updateClock, 30000);
+setInterval(() => { if (currentUser) refresh(); }, 15000);
