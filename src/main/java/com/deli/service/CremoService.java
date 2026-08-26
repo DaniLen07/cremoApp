@@ -131,6 +131,19 @@ public class CremoService {
         return saleRepository.findBySaleDateBetweenOrderByCreatedAtDesc(start, end);
     }
 
+    public Map<String, Object> dailyReport() {
+        LocalDate today = LocalDate.now(COLOMBIA);
+        List<Sale> sales = saleRepository.findBySaleDateBetweenOrderByCreatedAtDesc(today, today);
+        BigDecimal total = sales.stream().map(Sale::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+        int units = sales.stream().mapToInt(Sale::getQuantity).sum();
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("date", today);
+        report.put("units", units);
+        report.put("total", total);
+        report.put("sales", sales);
+        return report;
+    }
+
     public Map<String, Object> weeklyReport() {
         List<Sale> sales = weeklySales();
         BigDecimal total = sales.stream().map(Sale::getTotal).reduce(BigDecimal.ZERO, BigDecimal::add);

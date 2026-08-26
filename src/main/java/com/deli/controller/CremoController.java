@@ -145,6 +145,11 @@ public class CremoController {
         return service.weeklyReport();
     }
 
+    @GetMapping("/reports/daily")
+    public Map<String, Object> dailyReport() {
+        return service.dailyReport();
+    }
+
     @PutMapping("/product/price")
     public Product updatePrice(@Valid @RequestBody PriceRequest request) {
         return service.updatePrice(request);

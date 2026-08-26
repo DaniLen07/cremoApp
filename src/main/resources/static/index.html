@@ -141,6 +141,39 @@
         <section id="adminReports" class="panel reports-panel">
             <div class="panel-heading">
                 <div>
+                    <p class="eyebrow">Seguimiento diario</p>
+                    <h2>Ventas del día</h2>
+                </div><span id="dailyReportDate" class="panel-number">Hoy</span>
+            </div>
+            <div class="report-summary">
+                <div><span>Fecha</span><strong id="dailyPeriod">Hoy</strong></div>
+                <div><span>Unidades</span><strong id="dailyUnits">0</strong></div>
+                <div><span>Total vendido</span><strong id="dailyTotal">$0</strong></div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Vendedor</th>
+                            <th>Cantidad</th>
+                            <th>Medio de pago</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dailySalesTable">
+                        <tr>
+                            <td colspan="6" class="empty-state">Aún no hay ventas registradas hoy.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="adminWeeklyReports" class="panel reports-panel">
+            <div class="panel-heading">
+                <div>
                     <p class="eyebrow">Seguimiento</p>
                     <h2>Resumen semanal</h2>
                 </div><button id="refreshButton" class="text-button" type="button">Actualizar datos ↻</button>

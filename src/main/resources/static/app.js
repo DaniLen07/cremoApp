@@ -82,6 +82,15 @@ function renderSales(sales) {
     table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('');
 }
 
+function renderDailySales(sales) {
+    const table = $('dailySalesTable');
+    if (!sales.length) {
+        table.innerHTML = '<tr><td colspan="6" class="empty-state">Aún no hay ventas registradas hoy.</td></tr>';
+        return;
+    }
+    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('');
+}
+
 async function loadDashboard() {
     let data;
     try {
@@ -140,8 +149,18 @@ async function loadReport() {
     $('reportTotal').textContent = money(report.total);
 }
 
+async function loadDailyReport() {
+    const response = await apiRequest('/api/reports/daily');
+    const report = await response.json();
+    $('dailyPeriod').textContent = report.date;
+    $('dailyReportDate').textContent = report.date;
+    $('dailyUnits').textContent = report.units;
+    $('dailyTotal').textContent = money(report.total);
+    renderDailySales(report.sales || []);
+}
+
 async function refresh() {
-    const results = await Promise.allSettled([loadDashboard(), loadReport(), loadSellers()]);
+    const results = await Promise.allSettled([loadDashboard(), loadDailyReport(), loadReport(), loadSellers()]);
     updateSaleTotal();
     if (results.some(result => result.status === 'rejected')) {
         showFeedback($('saleFeedback'), 'Sin conexion. Mostrando los ultimos datos guardados.', true);
