@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cremo | Panel del vendedor</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">C</span><span>CREMO</span></div>
+        <div id="userControls" class="user-controls"><span id="userLabel"></span><button id="logoutButton"
+                type="button">Salir</button></div>
+    </header>
+    <main class="page-shell">
+        <section class="intro">
+            <div>
+                <p class="eyebrow">Panel del vendedor</p>
+                <h1>Mis ventas,<br><em>en control.</em></h1>
+                <p class="intro-copy">Registra tus ventas y consulta tu rendimiento.</p>
+            </div>
+            <div class="date-card"><span id="currentDate"></span><strong id="currentTime"></strong></div>
+        </section>
+        <section class="metrics seller-metrics" aria-label="Resumen de ventas">
+            <article class="metric-card metric-dark"><span>Unidades hoy</span><strong
+                    id="todayUnits">0</strong><small>unidades</small></article>
+            <article class="metric-card"><span>Vendido hoy</span><strong id="todayTotal">$0</strong><small>pesos
+                    colombianos</small></article>
+            <article class="metric-card"><span>Unidades acumuladas</span><strong id="totalUnits">0</strong><small>desde
+                    el registro</small></article>
+            <article class="metric-card"><span>Total vendido</span><strong
+                    id="totalAmount">$0</strong><small>histórico</small></article>
+        </section>
+        <div class="content-grid">
+            <section class="panel sale-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Nueva operación</p>
+                        <h2>Registrar venta</h2>
+                    </div><span class="panel-number">01</span>
+                </div>
+                <form id="saleForm">
+                    <label>Cantidad</label>
+                    <div class="quantity-control"><button type="button" class="quantity-button" id="decreaseQuantity"
+                            aria-label="Disminuir cantidad">−</button><input id="quantity" type="number" min="1"
+                            value="1" required><button type="button" class="quantity-button" id="increaseQuantity"
+                            aria-label="Aumentar cantidad">+</button></div>
+                    <fieldset>
+                        <legend>Medio de pago</legend>
+                        <div class="payment-options"><label class="payment-option"><input type="radio"
+                                    name="paymentMethod" value="EFECTIVO" checked><span>Efectivo</span></label><label
+                                class="payment-option"><input type="radio" name="paymentMethod"
+                                    value="NEQUI"><span>Nequi</span></label></div>
+                    </fieldset>
+                    <div class="sale-total"><span>Total de la venta</span><strong id="saleTotal">$5.000</strong></div>
+                    <button class="primary-button" type="submit">Confirmar venta <span>→</span></button>
+                    <p class="feedback" id="saleFeedback" role="status"></p>
+                </form>
+            </section>
+            <section class="panel seller-stats-panel">
+                <div class="panel-heading">
+                    <div>
+                        <p class="eyebrow">Seguimiento</p>
+                        <h2>Mis ventas registradas</h2>
+                    </div><span class="panel-number">02</span>
+                </div>
+                <div id="sellerSales" class="table-wrap"></div>
+            </section>
+        </div>
+    </main>
+    <script src="/seller.js"></script>
+</body>
+
+</html>

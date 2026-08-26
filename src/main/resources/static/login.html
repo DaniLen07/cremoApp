@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cremo | Iniciar sesión</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">C</span><span>CREMO</span></div>
+    </header>
+    <main class="login-view">
+        <form id="loginForm" class="login-panel">
+            <p class="eyebrow">Acceso seguro</p>
+            <h1>Bienvenido a Cremo</h1>
+            <label>Usuario<input id="loginUsername" type="text" autocomplete="username" required></label>
+            <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
+            <button class="primary-button" type="submit">Ingresar <span>→</span></button>
+            <p class="feedback" id="loginFeedback" role="alert"></p>
+        </form>
+    </main>
+    <script src="/login.js"></script>
+</body>
+
+</html>

@@ -23,6 +23,7 @@ import com.deli.dto.InventoryRequest;
 import com.deli.dto.LoginRequest;
 import com.deli.dto.PriceRequest;
 import com.deli.dto.SaleRequest;
+import com.deli.dto.SellerDailySummary;
 import com.deli.dto.SellerRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
@@ -77,6 +78,16 @@ public class CremoController {
         return user;
     }
 
+    @GetMapping("/seller/me/stats")
+    public Map<String, Object> sellerStats(Authentication authentication) {
+        return service.sellerStats(authentication.getName());
+    }
+
+    @GetMapping("/admin/seller-stats")
+    public java.util.List<SellerDailySummary> dailySellerStats() {
+        return service.dailySellerStats();
+    }
+
     @GetMapping("/product/current")
     public Product currentProduct() {
         return service.getProduct();
@@ -110,8 +121,9 @@ public class CremoController {
 
     @PostMapping("/sales")
     @ResponseStatus(HttpStatus.CREATED)
-    public Sale createSale(@Valid @RequestBody SaleRequest request) {
-        return service.createSale(request);
+    public Sale createSale(@Valid @RequestBody SaleRequest request, Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return service.createSale(request, authentication.getName(), admin);
     }
 
     @GetMapping("/reports/weekly")

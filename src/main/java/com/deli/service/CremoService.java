@@ -20,6 +20,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.deli.dto.InventoryRequest;
 import com.deli.dto.PriceRequest;
 import com.deli.dto.SaleRequest;
+import com.deli.dto.SellerDailySummary;
 import com.deli.dto.SellerRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
@@ -82,11 +83,21 @@ public class CremoService {
 
     @Transactional
     public Sale createSale(SaleRequest request) {
+        return createSale(request, null, true);
+    }
+
+    @Transactional
+    public Sale createSale(SaleRequest request, String username, boolean admin) {
         if (request.paymentMethod() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona un medio de pago");
         }
 
         String sellerName = request.sellerName() == null ? "No especificado" : request.sellerName().trim();
+        if (!admin && username != null) {
+            sellerName = sellerRepository.findByUsernameAndActiveTrue(username)
+                    .map(Seller::getName)
+                    .orElse(sellerName);
+        }
         if (!SELLER_NAMES.contains(sellerName) && !sellerRepository.existsByNameIgnoreCase(sellerName)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona un vendedor válido");
         }
@@ -141,6 +152,25 @@ public class CremoService {
 
     public List<Seller> getSellers() {
         return sellerRepository.findByActiveTrueOrderByNameAsc();
+    }
+
+    public Map<String, Object> sellerStats(String username) {
+        Seller seller = sellerRepository.findByUsernameAndActiveTrue(username)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vendedor no encontrado"));
+        LocalDate today = LocalDate.now(COLOMBIA);
+        Map<String, Object> stats = new LinkedHashMap<>();
+        stats.put("seller", seller);
+        stats.put("today", today);
+        stats.put("todayUnits", saleRepository.totalUnitsByDateAndSeller(today, seller.getName()));
+        stats.put("todayTotal", saleRepository.totalAmountByDateAndSeller(today, seller.getName()));
+        stats.put("totalUnits", saleRepository.totalUnitsBySeller(seller.getName()));
+        stats.put("totalAmount", saleRepository.totalAmountBySeller(seller.getName()));
+        stats.put("sales", saleRepository.findBySellerNameOrderByCreatedAtDesc(seller.getName()));
+        return stats;
+    }
+
+    public List<SellerDailySummary> dailySellerStats() {
+        return saleRepository.dailySummaryBySeller(LocalDate.now(COLOMBIA));
     }
 
     @Transactional

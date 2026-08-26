@@ -113,14 +113,16 @@ async function loadSellerPrice() {
 async function loadSellers() {
     const response = await apiRequest('/api/sellers');
     const sellers = await response.json();
+    const stats = currentUser.role === 'ADMIN'
+        ? await (await apiRequest('/api/admin/seller-stats')).json()
+        : [];
     const select = $('sellerName');
     select.innerHTML = '<option value="" selected disabled>Selecciona un vendedor</option>'
         + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
-    if (currentUser.role === 'ADMIN') {
-        $('sellerList').innerHTML = sellers.length
-            ? sellers.map(seller => `<div class="seller-row"><strong>${seller.name}</strong><span>${seller.phone} · ${seller.username}</span></div>`).join('')
-            : '<p class="empty-state">Aún no hay vendedores registrados.</p>';
-    }
+    const statsByName = new Map(stats.map(item => [item.sellerName, item]));
+    $('sellerList').innerHTML = sellers.length
+        ? `<div class="seller-table-wrap"><table><thead><tr><th>Vendedor</th><th>Contacto</th><th>Unidades hoy</th><th>Total vendido hoy</th></tr></thead><tbody>${sellers.map(seller => { const item = statsByName.get(seller.name) || {}; return `<tr><td><strong>${seller.name}</strong><small>${seller.username}</small></td><td>${seller.phone}</td><td>${item.units || 0}</td><td>${money(item.total)}</td></tr>`; }).join('')}</tbody></table></div>`
+        : '<p class="empty-state">Aún no hay vendedores registrados.</p>';
 }
 
 async function loadReport() {
@@ -139,50 +141,15 @@ async function loadReport() {
 }
 
 async function refresh() {
-    const results = currentUser.role === 'ADMIN'
-        ? await Promise.allSettled([loadDashboard(), loadReport(), loadSellers()])
-        : await Promise.allSettled([loadSellerPrice(), loadSellers()]);
+    const results = await Promise.allSettled([loadDashboard(), loadReport(), loadSellers()]);
     updateSaleTotal();
     if (results.some(result => result.status === 'rejected')) {
         showFeedback($('saleFeedback'), 'Sin conexion. Mostrando los ultimos datos guardados.', true);
     }
 }
 
-function showAuthenticatedApp(user) {
-    currentUser = user;
-    $('loginView').hidden = true;
-    $('appShell').hidden = false;
-    $('userControls').hidden = false;
-    $('userLabel').textContent = `${currentUser.username} · ${currentUser.role === 'ADMIN' ? 'Administrador' : 'Vendedor'}`;
-    $('adminInventory').hidden = currentUser.role !== 'ADMIN';
-    $('adminReports').hidden = currentUser.role !== 'ADMIN';
-    $('adminMetrics').hidden = currentUser.role !== 'ADMIN';
-    $('adminSellers').hidden = currentUser.role !== 'ADMIN';
-}
-
-async function startSession(username, password) {
-    await apiRequest('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-    });
-    const response = await apiRequest('/api/auth/me');
-    showAuthenticatedApp(await response.json());
-    await refresh();
-}
-
-$('loginForm').addEventListener('submit', async event => {
-    event.preventDefault();
-    try {
-        await startSession($('loginUsername').value.trim(), $('loginPassword').value);
-        showFeedback($('loginFeedback'), '');
-    } catch (error) {
-        showFeedback($('loginFeedback'), 'Usuario o contraseña incorrectos.', true);
-    }
-});
-
 $('logoutButton').addEventListener('click', async () => {
-    try { await apiRequest('/api/auth/logout', { method: 'POST' }); } finally { window.location.reload(); }
+    try { await apiRequest('/api/auth/logout', { method: 'POST' }); } finally { window.location.replace('/login.html'); }
 });
 
 $('sellerForm').addEventListener('submit', async event => {
@@ -246,7 +213,11 @@ window.addEventListener('online', refresh);
 updateClock();
 apiRequest('/api/auth/me')
     .then(response => response.json())
-    .then(async user => { showAuthenticatedApp(user); await refresh(); })
-    .catch(() => { });
+    .then(async user => {
+        currentUser = user;
+        if (currentUser.role !== 'ADMIN') window.location.replace('/seller.html');
+        else await refresh();
+    })
+    .catch(() => window.location.replace('/login.html'));
 setInterval(updateClock, 30000);
 setInterval(() => { if (currentUser) refresh(); }, 15000);

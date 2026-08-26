@@ -39,6 +39,8 @@ Al iniciar sesión, el administrador puede gestionar inventario, precio, reporte
 
 El administrador puede registrar vendedores desde el panel de equipo con nombre, teléfono, usuario y contraseña. Los vendedores registrados se guardan en MySQL, aparecen en el selector de ventas y pueden iniciar sesión inmediatamente sin reiniciar la aplicación. Las contraseñas se almacenan cifradas y nunca se muestran.
 
+El acceso comienza en `/login.html`. Después del login, el administrador entra al panel principal (`/`) y cada vendedor entra a `/seller.html`. El vendedor ve sus unidades y total vendido del día, además de su historial; el administrador ve una tabla diaria de todos los vendedores.
+
 La aplicación limpia automáticamente únicamente las ventas cada 3 días de funcionamiento. El inventario, los productos, precios y vendedores se conservan para poder continuar operando. El intervalo puede cambiarse con `DATA_RESET_INTERVAL_MS` si el despliegue necesita otro periodo.
 
 ## Abrir desde un celular en la misma red

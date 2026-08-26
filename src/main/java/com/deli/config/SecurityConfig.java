@@ -22,7 +22,9 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/index.html", "/app.js", "/styles.css", "/error").permitAll()
+                        .requestMatchers("/", "/index.html", "/login.html", "/seller.html", "/app.js", "/login.js",
+                                "/seller.js", "/styles.css", "/error")
+                        .permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                         .requestMatchers("/api/auth/me", "/api/product/current", "/api/sales").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/sellers").authenticated()

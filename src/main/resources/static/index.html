@@ -16,18 +16,7 @@
                 type="button">Salir</button></div>
     </header>
 
-    <section id="loginView" class="login-view">
-        <form id="loginForm" class="login-panel">
-            <p class="eyebrow">Acceso seguro</p>
-            <h1>Bienvenido a Cremo</h1>
-            <label>Usuario<input id="loginUsername" type="text" autocomplete="username" required></label>
-            <label>Contraseña<input id="loginPassword" type="password" autocomplete="current-password" required></label>
-            <button class="primary-button" type="submit">Ingresar <span>→</span></button>
-            <p class="feedback" id="loginFeedback" role="alert"></p>
-        </form>
-    </section>
-
-    <main id="appShell" class="page-shell" hidden>
+    <main class="page-shell">
         <section class="intro">
             <div>
                 <p class="eyebrow">Panel de operaciones</p>
@@ -126,7 +115,8 @@
                     <label>Nombre<input id="sellerRegisterName" type="text" maxlength="120" required></label>
                     <label>Telefono<input id="sellerPhone" type="tel" maxlength="30" required></label>
                     <label>Usuario<input id="sellerUsername" type="text" minlength="3" maxlength="60" required></label>
-                    <label>Contraseña<input id="sellerPassword" type="password" minlength="8" maxlength="100" required></label>
+                    <label>Contraseña<input id="sellerPassword" type="password" minlength="8" maxlength="100"
+                            required></label>
                     <button class="secondary-button" type="submit">Guardar vendedor</button>
                     <p class="feedback" id="sellerFeedback" role="status"></p>
                 </form>
