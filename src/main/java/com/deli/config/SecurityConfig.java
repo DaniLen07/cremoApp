@@ -27,9 +27,9 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/logout").permitAll()
                         .requestMatchers("/api/auth/me", "/api/product/current", "/api/sales",
-                            "/api/seller/me/stats").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/inventory/today").authenticated()
+                                "/api/seller/me/stats")
                         .authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/inventory/today").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/sellers").authenticated()
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .anyRequest().permitAll())
