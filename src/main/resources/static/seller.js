@@ -7,8 +7,10 @@ function csrfToken() {
 }
 
 async function apiRequest(url, options = {}) {
+    const writeRequest = options.method && options.method !== 'GET';
+    if (writeRequest && !csrfToken()) await fetch('/api/auth/csrf');
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
-    if (options.method && options.method !== 'GET') headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
+    if (writeRequest) headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
     const response = await fetch(url, { ...options, headers });
     if (response.status === 401 || response.status === 403) { window.location.replace('/login.html'); throw new Error('Sesión expirada'); }
     if (!response.ok) throw new Error('No se pudo completar la operación');
