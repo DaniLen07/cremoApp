@@ -111,7 +111,7 @@ public class CremoService {
         inventory.setAvailableQuantity(inventory.getAvailableQuantity() - request.quantity());
         inventoryRepository.save(inventory);
         return saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName,
-            request.arequipe(), request.powderedMilk(), request.raisins()));
+                request.arequipe(), request.powderedMilk(), request.raisins()));
     }
 
     public Map<String, Object> dashboard() {

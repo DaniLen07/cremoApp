@@ -1,13 +1,14 @@
 package com.deli;
 
+import java.math.BigDecimal;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.api.Test;
 
 import com.deli.dto.SaleRequest;
 import com.deli.model.PaymentMethod;
 import com.deli.model.Product;
 import com.deli.model.Sale;
-import java.math.BigDecimal;
-import org.junit.jupiter.api.Test;
 
 class SaleSellerTest {
 
