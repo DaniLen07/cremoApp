@@ -1,9 +1,11 @@
 package com.deli.service;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@ConditionalOnProperty(name = "app.data-reset.enabled", havingValue = "true")
 public class DataCleanupScheduler {
     private final CremoService cremoService;
 

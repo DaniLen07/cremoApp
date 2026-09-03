@@ -17,6 +17,8 @@ import java.time.ZoneId;
 @Entity
 @Table(name = "sales")
 public class Sale {
+    public static final BigDecimal TOPPING_PRICE = new BigDecimal("1000");
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,6 +33,10 @@ public class Sale {
     private LocalDate saleDate;
     private LocalDateTime createdAt;
     private String sellerName;
+    private boolean arequipe;
+    private boolean powderedMilk;
+    private boolean raisins;
+    private BigDecimal toppingsTotal;
 
     @Enumerated(EnumType.STRING)
     private PaymentMethod paymentMethod;
@@ -39,10 +45,21 @@ public class Sale {
     }
 
     public Sale(Product product, int quantity, PaymentMethod paymentMethod, String sellerName) {
+        this(product, quantity, paymentMethod, sellerName, false, false, false);
+    }
+
+    public Sale(Product product, int quantity, PaymentMethod paymentMethod, String sellerName,
+            boolean arequipe, boolean powderedMilk, boolean raisins) {
         this.product = product;
         this.quantity = quantity;
-        this.unitPrice = product.getPrice();
+        this.arequipe = arequipe;
+        this.powderedMilk = powderedMilk;
+        this.raisins = raisins;
+        int toppingCount = (arequipe ? 1 : 0) + (powderedMilk ? 1 : 0) + (raisins ? 1 : 0);
+        BigDecimal toppingUnitPrice = TOPPING_PRICE.multiply(BigDecimal.valueOf(toppingCount));
+        this.unitPrice = product.getPrice().add(toppingUnitPrice);
         this.total = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        this.toppingsTotal = toppingUnitPrice.multiply(BigDecimal.valueOf(quantity));
         ZoneId colombia = ZoneId.of("America/Bogota");
         this.saleDate = LocalDate.now(colombia);
         this.createdAt = LocalDateTime.now(colombia);
@@ -84,5 +101,21 @@ public class Sale {
 
     public PaymentMethod getPaymentMethod() {
         return paymentMethod;
+    }
+
+    public boolean isArequipe() {
+        return arequipe;
+    }
+
+    public boolean isPowderedMilk() {
+        return powderedMilk;
+    }
+
+    public boolean isRaisins() {
+        return raisins;
+    }
+
+    public BigDecimal getToppingsTotal() {
+        return toppingsTotal;
     }
 }

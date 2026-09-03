@@ -7,6 +7,10 @@ let currentPrice = 5000;
 let initialStock = 0;
 let currentUser = null;
 
+function csrfToken() {
+    return document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
+}
+
 function setConnectionStatus(online) {
     const status = $('connectionStatus');
     status.classList.toggle('offline', !online);
@@ -24,6 +28,7 @@ async function apiRequest(url, options = {}) {
         const timeout = setTimeout(() => controller.abort(), requestTimeout);
         try {
             const headers = { ...(options.headers || {}) };
+            if (!readRequest) headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
             const response = await fetch(url, { ...options, headers, signal: controller.signal });
             clearTimeout(timeout);
             if (response.ok) setConnectionStatus(true);
@@ -58,7 +63,13 @@ function updateClock() {
     $('currentTime').textContent = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 }
 
-function updateSaleTotal() { $('saleTotal').textContent = money(Number($('quantity').value || 0) * currentPrice); }
+function selectedToppings() { return ['arequipe', 'powderedMilk', 'raisins'].filter(id => $(id).checked).length; }
+function updateSaleTotal() {
+    const quantity = Number($('quantity').value || 0);
+    const toppingsTotal = quantity * selectedToppings() * 1000;
+    $('saleToppingsTotal').textContent = toppingsTotal ? ` + ${money(toppingsTotal)} en toppings` : '';
+    $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal);
+}
 
 function setQuantity(value) {
     $('quantity').value = Math.max(1, Number(value) || 1);
@@ -230,6 +241,7 @@ $('sellerEditForm').addEventListener('submit', async event => {
 $('decreaseQuantity').addEventListener('click', event => { setQuantity(Number($('quantity').value) - 1); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); });
 $('increaseQuantity').addEventListener('click', event => { setQuantity(Number($('quantity').value) + 1); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); });
 $('quantity').addEventListener('input', updateSaleTotal);
+['arequipe', 'powderedMilk', 'raisins'].forEach(id => $(id).addEventListener('change', updateSaleTotal));
 $('saleForm').addEventListener('submit', async event => {
     event.preventDefault();
     const feedback = $('saleFeedback');
@@ -237,8 +249,8 @@ $('saleForm').addEventListener('submit', async event => {
     const sellerName = $('sellerName').value.trim();
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
     try {
-        await apiRequest('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName }) });
-        showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = ''; updateSaleTotal(); await refresh();
+        await apiRequest('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName, arequipe: $('arequipe').checked, powderedMilk: $('powderedMilk').checked, raisins: $('raisins').checked }) });
+        showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = ''; $('arequipe').checked = false; $('powderedMilk').checked = false; $('raisins').checked = false; updateSaleTotal(); await refresh();
     } catch (error) {
         showFeedback(feedback, `${error.message} La venta no fue registrada.`, true);
     }

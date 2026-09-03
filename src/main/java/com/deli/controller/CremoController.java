@@ -81,6 +81,11 @@ public class CremoController {
         return user;
     }
 
+    @GetMapping("/health")
+    public Map<String, String> health() {
+        return Map.of("status", "UP");
+    }
+
     @GetMapping("/seller/me/stats")
     public Map<String, Object> sellerStats(Authentication authentication) {
         return service.sellerStats(authentication.getName());

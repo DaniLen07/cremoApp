@@ -494,6 +494,13 @@ fieldset {
     font-size: 12px;
 }
 
+.sale-total small {
+    display: block;
+    margin-top: 4px;
+    color: var(--green);
+    font-size: 10px;
+}
+
 .sale-total strong {
     font-size: 27px;
     letter-spacing: -.05em;

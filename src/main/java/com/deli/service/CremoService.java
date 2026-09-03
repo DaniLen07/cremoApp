@@ -48,8 +48,8 @@ public class CremoService {
 
     public CremoService(ProductRepository productRepository, InventoryRepository inventoryRepository,
             SaleRepository saleRepository, SellerRepository sellerRepository, PasswordEncoder passwordEncoder,
-            @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername,
-            @Value("${APP_SELLER_USERNAME:vendedor}") String fallbackSellerUsername) {
+            @Value("${APP_ADMIN_USERNAME}") String adminUsername,
+            @Value("${APP_SELLER_USERNAME}") String fallbackSellerUsername) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.saleRepository = saleRepository;
@@ -110,7 +110,8 @@ public class CremoService {
         }
         inventory.setAvailableQuantity(inventory.getAvailableQuantity() - request.quantity());
         inventoryRepository.save(inventory);
-        return saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName));
+        return saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName,
+            request.arequipe(), request.powderedMilk(), request.raisins()));
     }
 
     public Map<String, Object> dashboard() {

@@ -29,6 +29,10 @@ CREATE TABLE IF NOT EXISTS sales (
     created_at DATETIME NOT NULL,
     seller_name VARCHAR(120) NOT NULL DEFAULT 'No especificado',
     payment_method VARCHAR(20) NOT NULL,
+    arequipe BOOLEAN NOT NULL DEFAULT FALSE,
+    powdered_milk BOOLEAN NOT NULL DEFAULT FALSE,
+    raisins BOOLEAN NOT NULL DEFAULT FALSE,
+    toppings_total DECIMAL(12, 2) NOT NULL DEFAULT 0,
     CONSTRAINT fk_sale_product FOREIGN KEY (product_id) REFERENCES products (id),
     CONSTRAINT chk_payment_method CHECK (
         payment_method IN ('EFECTIVO', 'NEQUI')

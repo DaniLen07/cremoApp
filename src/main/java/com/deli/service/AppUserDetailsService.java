@@ -23,10 +23,10 @@ public class AppUserDetailsService implements UserDetailsService {
     public AppUserDetailsService(
             SellerRepository sellerRepository,
             PasswordEncoder passwordEncoder,
-            @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername,
-            @Value("${APP_ADMIN_PASSWORD:jm6181}") String adminPassword,
-            @Value("${APP_SELLER_USERNAME:vendedor}") String fallbackSellerUsername,
-            @Value("${APP_SELLER_PASSWORD:cambia-vendedor-123}") String fallbackSellerPassword) {
+            @Value("${APP_ADMIN_USERNAME}") String adminUsername,
+            @Value("${APP_ADMIN_PASSWORD}") String adminPassword,
+            @Value("${APP_SELLER_USERNAME}") String fallbackSellerUsername,
+            @Value("${APP_SELLER_PASSWORD}") String fallbackSellerPassword) {
         this.sellerRepository = sellerRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminUsername = adminUsername;

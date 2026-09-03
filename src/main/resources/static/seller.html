@@ -24,14 +24,15 @@
             <div class="date-card"><span id="currentDate"></span><strong id="currentTime"></strong></div>
         </section>
         <section class="metrics seller-metrics" aria-label="Resumen de ventas">
-            <article class="metric-card metric-dark"><span>Producto disponible</span><strong id="availableProduct">0</strong><small>unidades</small></article>
+            <article class="metric-card metric-dark"><span>Producto disponible</span><strong
+                    id="availableProduct">0</strong><small>unidades</small></article>
             <article class="metric-card metric-dark"><span>Unidades hoy</span><strong
                     id="todayUnits">0</strong><small>unidades</small></article>
             <article class="metric-card"><span>Vendido hoy</span><strong id="todayTotal">$0</strong><small>pesos
                     colombianos</small></article>
             <article class="metric-card"><span>Unidades acumuladas</span><strong id="totalUnits">0</strong><small>desde
                     el registro</small></article>
-                <article class="metric-card"><span>Total vendido</span><strong
+            <article class="metric-card"><span>Total vendido</span><strong
                     id="totalAmount">$0</strong><small>histórico</small></article>
         </section>
         <div class="content-grid">
@@ -49,13 +50,21 @@
                             value="1" required><button type="button" class="quantity-button" id="increaseQuantity"
                             aria-label="Aumentar cantidad">+</button></div>
                     <fieldset>
+                        <legend>Toppings · $1.000 cada uno por unidad</legend>
+                        <div class="payment-options topping-options">
+                            <label class="payment-option"><input type="checkbox" id="arequipe"><span>Arequipe</span></label>
+                            <label class="payment-option"><input type="checkbox" id="powderedMilk"><span>Leche en polvo</span></label>
+                            <label class="payment-option"><input type="checkbox" id="raisins"><span>Uvas pasas</span></label>
+                        </div>
+                    </fieldset>
+                    <fieldset>
                         <legend>Medio de pago</legend>
                         <div class="payment-options"><label class="payment-option"><input type="radio"
                                     name="paymentMethod" value="EFECTIVO" checked><span>Efectivo</span></label><label
                                 class="payment-option"><input type="radio" name="paymentMethod"
                                     value="NEQUI"><span>Nequi</span></label></div>
                     </fieldset>
-                    <div class="sale-total"><span>Total de la venta</span><strong id="saleTotal">$5.000</strong></div>
+                    <div class="sale-total"><span>Total de la venta<small id="saleToppingsTotal"></small></span><strong id="saleTotal">$5.000</strong></div>
                     <button class="primary-button" type="submit">Confirmar venta <span>→</span></button>
                     <p class="feedback" id="saleFeedback" role="status"></p>
                 </form>

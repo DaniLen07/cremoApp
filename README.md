@@ -10,7 +10,7 @@ Aplicacion web para registrar ventas e inventario de arroz con leche. La interfa
 
 ## Ejecutar en Windows
 
-1. Crea la base de datos y ejecuta `database/schema.sql` en MySQL. Si ya existe, ejecuta tambien `database/migration-payment-method.sql`.
+1. Crea la base de datos y ejecuta `database/schema.sql` en MySQL. Si ya existe, ejecuta las migraciones necesarias: `database/migration-payment-method.sql` y `database/migration-toppings.sql`.
 2. Abre una terminal en esta carpeta (`deli`).
 3. Define las variables de conexion. Ajusta la contrasena a la de tu instalacion:
 
@@ -21,10 +21,11 @@ $env:DB_NAME="bdDeli"
 $env:DB_USERNAME="root"
 $env:DB_PASSWORD="TU_CONTRASENA_MYSQL"
 $env:DB_SSL="false"
-$env:APP_ADMIN_USERNAME="juanm20"
-$env:APP_ADMIN_PASSWORD="jm6181"
-$env:APP_SELLER_USERNAME="vendedor"
-$env:APP_SELLER_PASSWORD="CAMBIA_ESTA_CLAVE"
+$env:APP_ADMIN_USERNAME="TU_USUARIO_ADMIN"
+$env:APP_ADMIN_PASSWORD="TU_CLAVE_ADMIN_SEGURA"
+$env:APP_SELLER_USERNAME="TU_USUARIO_VENDEDOR"
+$env:APP_SELLER_PASSWORD="TU_CLAVE_VENDEDOR_SEGURA"
+$env:APP_COOKIE_SECURE="false"
 ```
 
 4. Inicia la aplicacion:
@@ -41,7 +42,7 @@ El administrador puede registrar vendedores desde el panel de equipo con nombre,
 
 El acceso comienza en `/login.html`. Después del login, el administrador entra al panel principal (`/`) y cada vendedor entra a `/seller.html`. El vendedor ve sus unidades y total vendido del día, además de su historial; el administrador ve una tabla diaria de todos los vendedores.
 
-La aplicación limpia automáticamente únicamente las ventas cada 3 días de funcionamiento. El inventario, los productos, precios y vendedores se conservan para poder continuar operando. El intervalo puede cambiarse con `DATA_RESET_INTERVAL_MS` si el despliegue necesita otro periodo.
+El borrado automático de ventas está desactivado por defecto para conservar el historial durante reinicios y despliegues. Si se necesita activarlo de forma excepcional, define `DATA_RESET_ENABLED=true` y ajusta `DATA_RESET_INTERVAL_MS`; el inventario, los productos, precios y vendedores se conservan.
 
 ## Abrir desde un celular en la misma red
 
@@ -76,6 +77,8 @@ git push -u origin main
 ```
 
 El archivo `.gitignore` evita subir `target`, logs y archivos `.env`. Nunca pongas `DB_PASSWORD` en el repositorio. Si alguna contrasena estuvo en una version anterior o fue compartida, cambiala antes del despliegue.
+
+En producción usa `APP_COOKIE_SECURE=true` porque el acceso será mediante HTTPS. Las variables `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `APP_ADMIN_USERNAME`, `APP_ADMIN_PASSWORD`, `APP_SELLER_USERNAME` y `APP_SELLER_PASSWORD` son obligatorias; la aplicación no trae credenciales de respaldo.
 
 Para publicar cambios posteriormente:
 
@@ -117,7 +120,7 @@ DB_PASSWORD=contrasena
 DB_SSL=true
 ```
 
-6. Ejecuta una sola vez el contenido de `database/schema.sql` en la base MySQL administrada. Si la base ya tenia tablas, ejecuta `database/migration-payment-method.sql` en lugar del esquema inicial.
+6. Ejecuta una sola vez el contenido de `database/schema.sql` en la base MySQL administrada. Si la base ya tenia tablas, ejecuta `database/migration-payment-method.sql` y `database/migration-toppings.sql` en lugar del esquema inicial.
 7. Genera el dominio publico desde la configuracion del servicio web. La URL sera parecida a `https://cremo-deli-production.up.railway.app/`.
 8. Abre esa URL desde el celular usando datos moviles. Ya no dependera de la Wi-Fi ni de que tu PC este encendido.
 

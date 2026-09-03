@@ -1,5 +1,11 @@
+function csrfToken() {
+    return document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
+}
+
 const loginRequest = async (url, options = {}) => {
-    const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+    const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
+    if (options.method && options.method !== 'GET') headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
+    const response = await fetch(url, { ...options, headers });
     if (!response.ok) throw new Error('Credenciales incorrectas');
     return response;
 };
