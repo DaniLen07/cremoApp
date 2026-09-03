@@ -3,6 +3,7 @@ function csrfToken() {
 }
 
 const loginRequest = async (url, options = {}) => {
+    if (options.method && options.method !== 'GET') await fetch('/api/auth/csrf');
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (options.method && options.method !== 'GET') headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
     const response = await fetch(url, { ...options, headers });

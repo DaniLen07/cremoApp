@@ -25,7 +25,8 @@ public class SecurityConfig {
                         .requestMatchers("/", "/index.html", "/login.html", "/seller.html", "/app.js", "/login.js",
                                 "/seller.js", "/styles.css", "/error")
                         .permitAll()
-                        .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/health").permitAll()
+                        .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/csrf", "/api/health")
+                        .permitAll()
                         .requestMatchers("/api/auth/me", "/api/product/current", "/api/sales",
                                 "/api/seller/me/stats")
                         .authenticated()
