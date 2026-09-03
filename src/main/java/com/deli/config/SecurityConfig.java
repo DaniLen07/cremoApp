@@ -20,7 +20,9 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+                .csrf(csrf -> csrf
+                    .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                    .ignoringRequestMatchers("/api/auth/login"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/login.html", "/seller.html", "/app.js", "/login.js",
                                 "/seller.js", "/styles.css", "/error")
