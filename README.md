@@ -78,7 +78,7 @@ git push -u origin main
 
 El archivo `.gitignore` evita subir `target`, logs y archivos `.env`. Nunca pongas `DB_PASSWORD` en el repositorio. Si alguna contrasena estuvo en una version anterior o fue compartida, cambiala antes del despliegue.
 
-En producción usa `APP_COOKIE_SECURE=true` porque el acceso será mediante HTTPS. Las variables `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `APP_ADMIN_USERNAME`, `APP_ADMIN_PASSWORD`, `APP_SELLER_USERNAME` y `APP_SELLER_PASSWORD` son obligatorias; la aplicación no trae credenciales de respaldo.
+En producción usa `APP_COOKIE_SECURE=true` porque el acceso será mediante HTTPS. Configura siempre `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `APP_ADMIN_USERNAME`, `APP_ADMIN_PASSWORD`, `APP_SELLER_USERNAME` y `APP_SELLER_PASSWORD`; existen valores de respaldo solo para permitir el arranque de emergencia y deben reemplazarse.
 
 Para publicar cambios posteriormente:
 

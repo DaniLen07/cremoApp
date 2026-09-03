@@ -48,8 +48,8 @@ public class CremoService {
 
     public CremoService(ProductRepository productRepository, InventoryRepository inventoryRepository,
             SaleRepository saleRepository, SellerRepository sellerRepository, PasswordEncoder passwordEncoder,
-            @Value("${APP_ADMIN_USERNAME}") String adminUsername,
-            @Value("${APP_SELLER_USERNAME}") String fallbackSellerUsername) {
+            @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername,
+            @Value("${APP_SELLER_USERNAME:vendedor}") String fallbackSellerUsername) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.saleRepository = saleRepository;
