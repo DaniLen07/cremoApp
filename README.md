@@ -36,7 +36,7 @@ mvn spring-boot:run
 
 Abre http://localhost:8080/ en el PC.
 
-Al iniciar sesión, el administrador puede gestionar inventario, precio, reportes y ventas. El vendedor solo puede registrar ventas. Las credenciales se configuran con las variables `APP_ADMIN_*` y `APP_SELLER_*`; cambia siempre las claves predeterminadas antes de desplegar.
+Al iniciar sesión, el administrador puede gestionar inventario, precio, reportes y ventas. El vendedor solo puede registrar ventas. Cada vendedor tiene un usuario y contraseña diferente, registrados por el administrador desde el panel de equipo.
 
 El administrador puede registrar vendedores desde el panel de equipo con nombre, teléfono, usuario y contraseña. Los vendedores registrados se guardan en MySQL, aparecen en el selector de ventas y pueden iniciar sesión inmediatamente sin reiniciar la aplicación. Las contraseñas se almacenan cifradas y nunca se muestran.
 
@@ -78,7 +78,7 @@ git push -u origin main
 
 El archivo `.gitignore` evita subir `target`, logs y archivos `.env`. Nunca pongas `DB_PASSWORD` en el repositorio. Si alguna contrasena estuvo en una version anterior o fue compartida, cambiala antes del despliegue.
 
-En producción usa `APP_COOKIE_SECURE=true` porque el acceso será mediante HTTPS. Configura siempre `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `APP_ADMIN_USERNAME`, `APP_ADMIN_PASSWORD`, `APP_SELLER_USERNAME` y `APP_SELLER_PASSWORD`; existen valores de respaldo solo para permitir el arranque de emergencia y deben reemplazarse.
+En producción usa `APP_COOKIE_SECURE=true` porque el acceso será mediante HTTPS. Configura siempre `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `APP_ADMIN_USERNAME` y `APP_ADMIN_PASSWORD`. No configures `APP_SELLER_USERNAME` ni `APP_SELLER_PASSWORD`: los vendedores se almacenan individualmente en MySQL con contraseñas cifradas.
 
 Para publicar cambios posteriormente:
 

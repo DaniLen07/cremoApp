@@ -17,22 +17,16 @@ public class AppUserDetailsService implements UserDetailsService {
     private final PasswordEncoder passwordEncoder;
     private final String adminUsername;
     private final String adminPassword;
-    private final String fallbackSellerUsername;
-    private final String fallbackSellerPassword;
 
     public AppUserDetailsService(
             SellerRepository sellerRepository,
             PasswordEncoder passwordEncoder,
             @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername,
-            @Value("${APP_ADMIN_PASSWORD:jm6181}") String adminPassword,
-            @Value("${APP_SELLER_USERNAME:vendedor}") String fallbackSellerUsername,
-            @Value("${APP_SELLER_PASSWORD:cambia-vendedor-123}") String fallbackSellerPassword) {
+            @Value("${APP_ADMIN_PASSWORD:jm6181}") String adminPassword) {
         this.sellerRepository = sellerRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminUsername = adminUsername;
         this.adminPassword = adminPassword;
-        this.fallbackSellerUsername = fallbackSellerUsername;
-        this.fallbackSellerPassword = fallbackSellerPassword;
     }
 
     @Override
@@ -40,10 +34,6 @@ public class AppUserDetailsService implements UserDetailsService {
         if (adminUsername.equalsIgnoreCase(username)) {
             return User.withUsername(adminUsername).password(passwordEncoder.encode(adminPassword)).roles("ADMIN")
                     .build();
-        }
-        if (fallbackSellerUsername.equalsIgnoreCase(username)) {
-            return User.withUsername(fallbackSellerUsername).password(passwordEncoder.encode(fallbackSellerPassword))
-                    .roles("SELLER").build();
         }
         Seller seller = sellerRepository.findByUsernameAndActiveTrue(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));

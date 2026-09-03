@@ -44,19 +44,16 @@ public class CremoService {
     private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
     private final String adminUsername;
-    private final String fallbackSellerUsername;
 
     public CremoService(ProductRepository productRepository, InventoryRepository inventoryRepository,
             SaleRepository saleRepository, SellerRepository sellerRepository, PasswordEncoder passwordEncoder,
-            @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername,
-            @Value("${APP_SELLER_USERNAME:vendedor}") String fallbackSellerUsername) {
+            @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.saleRepository = saleRepository;
         this.sellerRepository = sellerRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminUsername = adminUsername;
-        this.fallbackSellerUsername = fallbackSellerUsername;
     }
 
     public Product getProduct() {
@@ -192,7 +189,7 @@ public class CremoService {
     public Seller registerSeller(SellerRequest request) {
         String username = request.username().trim();
         String name = request.name().trim();
-        if (username.equalsIgnoreCase(adminUsername) || username.equalsIgnoreCase(fallbackSellerUsername)) {
+        if (username.equalsIgnoreCase(adminUsername)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese usuario esta reservado");
         }
         if (sellerRepository.existsByUsernameIgnoreCase(username)) {
@@ -211,7 +208,7 @@ public class CremoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Vendedor no encontrado"));
         String username = request.username().trim();
         String name = request.name().trim();
-        if (username.equalsIgnoreCase(adminUsername) || username.equalsIgnoreCase(fallbackSellerUsername)) {
+        if (username.equalsIgnoreCase(adminUsername)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Ese usuario esta reservado");
         }
         if (sellerRepository.existsByUsernameIgnoreCaseAndIdNot(username, id)) {
