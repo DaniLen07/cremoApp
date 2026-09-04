@@ -18,7 +18,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "sales")
 public class Sale {
-    public static final BigDecimal TOPPING_PRICE = new BigDecimal("1000");
+    public static final BigDecimal TOPPING_PRICE = new BigDecimal("500");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

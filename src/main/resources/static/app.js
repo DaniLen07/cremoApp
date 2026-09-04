@@ -28,11 +28,19 @@ async function apiRequest(url, options = {}) {
         const timeout = setTimeout(() => controller.abort(), requestTimeout);
         try {
             const headers = { ...(options.headers || {}) };
-            if (!readRequest) headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
+            if (!readRequest) {
+                await fetch('/api/auth/csrf');
+                headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
+            }
             const response = await fetch(url, { ...options, headers, signal: controller.signal });
             clearTimeout(timeout);
             if (response.ok) setConnectionStatus(true);
-            if (!response.ok) throw new Error(`Error del servidor (${response.status})`);
+            if (!response.ok) {
+                const message = response.status === 403
+                    ? 'No tienes permisos para realizar esta acción. Ingresa con la cuenta administradora.'
+                    : `Error del servidor (${response.status})`;
+                throw new Error(message);
+            }
             return response;
         } catch (error) {
             clearTimeout(timeout);
@@ -66,7 +74,7 @@ function updateClock() {
 function selectedToppings() { return ['arequipe', 'powderedMilk', 'raisins'].filter(id => $(id).checked).length; }
 function updateSaleTotal() {
     const quantity = Number($('quantity').value || 0);
-    const toppingsTotal = quantity * selectedToppings() * 1000;
+    const toppingsTotal = quantity * selectedToppings() * 500;
     $('saleToppingsTotal').textContent = toppingsTotal ? ` + ${money(toppingsTotal)} en toppings` : '';
     $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal);
 }

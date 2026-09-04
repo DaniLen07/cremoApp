@@ -24,8 +24,8 @@ class SaleSellerTest {
         Sale sale = new Sale(new Product("Arroz con leche", new BigDecimal("5000")), 2,
                 PaymentMethod.EFECTIVO, "Daniel", true, false, true);
 
-        assertEquals(0, sale.getUnitPrice().compareTo(new BigDecimal("7000")));
-        assertEquals(0, sale.getTotal().compareTo(new BigDecimal("14000")));
-        assertEquals(0, sale.getToppingsTotal().compareTo(new BigDecimal("4000")));
+        assertEquals(0, sale.getUnitPrice().compareTo(new BigDecimal("6000")));
+        assertEquals(0, sale.getTotal().compareTo(new BigDecimal("12000")));
+        assertEquals(0, sale.getToppingsTotal().compareTo(new BigDecimal("2000")));
     }
 }

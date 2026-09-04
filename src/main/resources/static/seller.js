@@ -8,18 +8,19 @@ function csrfToken() {
 
 async function apiRequest(url, options = {}) {
     const writeRequest = options.method && options.method !== 'GET';
-    if (writeRequest && !csrfToken()) await fetch('/api/auth/csrf');
+    if (writeRequest) await fetch('/api/auth/csrf');
     const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
     if (writeRequest) headers['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken() || '');
     const response = await fetch(url, { ...options, headers });
-    if (response.status === 401 || response.status === 403) { window.location.replace('/login.html'); throw new Error('Sesión expirada'); }
-    if (!response.ok) throw new Error('No se pudo completar la operación');
+    if (response.status === 401) { window.location.replace('/login.html'); throw new Error('Sesión expirada'); }
+    if (response.status === 403) throw new Error('No tienes permisos para realizar esta acción.');
+    if (!response.ok) throw new Error(`Error del servidor (${response.status})`);
     return response;
 }
 
 function updateClock() { const now = new Date(); $('currentDate').textContent = now.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }); $('currentTime').textContent = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); }
 function selectedToppings() { return ['arequipe', 'powderedMilk', 'raisins'].filter(id => $(id).checked).length; }
-function updateTotal() { const quantity = Number($('quantity').value || 0); const toppingsTotal = quantity * selectedToppings() * 1000; $('saleToppingsTotal').textContent = toppingsTotal ? ` + ${money(toppingsTotal)} en toppings` : ''; $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal); }
+function updateTotal() { const quantity = Number($('quantity').value || 0); const toppingsTotal = quantity * selectedToppings() * 500; $('saleToppingsTotal').textContent = toppingsTotal ? ` + ${money(toppingsTotal)} en toppings` : ''; $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal); }
 function renderSales(sales) { $('sellerSales').innerHTML = sales.length ? `<table><thead><tr><th>Fecha</th><th>Hora</th><th>Cantidad</th><th>Medio de pago</th><th>Total</th></tr></thead><tbody>${sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('')}</tbody></table>` : '<p class="empty-state">Aún no tienes ventas registradas.</p>'; }
 async function load() { const user = await (await apiRequest('/api/auth/me')).json(); if (user.role !== 'SELLER') { window.location.replace('/'); return; } $('userLabel').textContent = `${user.username} · Vendedor`; const product = await (await apiRequest('/api/product/current')).json(); currentPrice = Number(product.price); const inventory = await (await apiRequest('/api/inventory/today')).json(); $('availableProduct').textContent = inventory.availableQuantity || 0; const stats = await (await apiRequest('/api/seller/me/stats')).json(); $('todayUnits').textContent = stats.todayUnits; $('todayTotal').textContent = money(stats.todayTotal); $('totalUnits').textContent = stats.totalUnits; $('totalAmount').textContent = money(stats.totalAmount); renderSales(stats.sales); updateTotal(); }
 
