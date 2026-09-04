@@ -14,7 +14,14 @@ async function apiRequest(url, options = {}) {
     const response = await fetch(url, { ...options, headers });
     if (response.status === 401) { window.location.replace('/login.html'); throw new Error('Sesión expirada'); }
     if (response.status === 403) throw new Error('No tienes permisos para realizar esta acción.');
-    if (!response.ok) throw new Error(`Error del servidor (${response.status})`);
+    if (!response.ok) {
+        let detail = '';
+        try {
+            const body = await response.json();
+            detail = body.detail || body.message || body.error || '';
+        } catch { }
+        throw new Error(detail || `Error del servidor (${response.status})`);
+    }
     return response;
 }
 

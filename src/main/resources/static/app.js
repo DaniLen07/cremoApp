@@ -36,9 +36,14 @@ async function apiRequest(url, options = {}) {
             clearTimeout(timeout);
             if (response.ok) setConnectionStatus(true);
             if (!response.ok) {
+                let detail = '';
+                try {
+                    const body = await response.json();
+                    detail = body.detail || body.message || body.error || '';
+                } catch { }
                 const message = response.status === 403
                     ? 'No tienes permisos para realizar esta acción. Ingresa con la cuenta administradora.'
-                    : `Error del servidor (${response.status})`;
+                    : detail || `Error del servidor (${response.status})`;
                 throw new Error(message);
             }
             return response;
