@@ -96,35 +96,41 @@ mvn clean package -DskipTests
 java -jar target/cremo-0.0.1-SNAPSHOT.jar
 ```
 
-## Despliegue recomendado: Railway + MySQL
+## Despliegue sin tarjeta: Render + PostgreSQL
 
-Railway es una opcion sencilla porque permite crear el servicio web y una base MySQL administrada. Render, Azure App Service y otros proveedores funcionan de forma equivalente.
+Esta configuración usa un servicio web gratuito de Render y una base PostgreSQL gratuita externa, por ejemplo Neon o Supabase. Render Free puede suspender la aplicación tras un periodo sin visitas; la primera solicitud posterior puede tardar aproximadamente un minuto mientras Spring Boot vuelve a iniciar. Los datos permanecen en PostgreSQL.
 
-1. Crea una cuenta en Railway.
-2. Crea un proyecto nuevo y agrega un servicio MySQL. Espera a que la base este disponible.
-3. Agrega otro servicio desde GitHub y selecciona el repositorio `cremo-deli`.
-4. Configura el servicio Java con:
+1. Crea una base PostgreSQL en Neon o Supabase y guarda su host, puerto, nombre, usuario y contraseña. Configúrala para aceptar conexiones externas y usa SSL.
+2. Ejecuta `database/schema-postgresql.sql` una sola vez en esa base. Si vas a conservar ventas de MySQL, exporta los datos y conviértelos antes de importarlos; no mezcles directamente ambos esquemas.
+3. Sube el proyecto a GitHub sin incluir contraseñas ni archivos `.env`.
+4. En Render crea un **Web Service** desde el repositorio.
+5. Configura:
 
 - Build command: `mvn clean package -DskipTests`
 - Start command: `java -jar target/cremo-0.0.1-SNAPSHOT.jar`
-- Java: 17 o superior
+- Runtime: Java 17
 
-5. En la pestaña de variables del servicio web agrega las credenciales que muestra el servicio MySQL. Mapea sus nombres a estas variables de la aplicacion:
+6. Agrega estas variables privadas en Render:
 
 ```text
-DB_HOST=host-de-mysql
-DB_PORT=3306
-DB_NAME=bdDeli
+DB_HOST=host-de-la-base
+DB_PORT=5432
+DB_NAME=nombre_de_la_base
 DB_USERNAME=usuario
 DB_PASSWORD=contrasena
-DB_SSL=true
+DB_SSL_MODE=require
+DB_DRIVER=org.postgresql.Driver
+APP_ADMIN_USERNAME=usuario-admin
+APP_ADMIN_PASSWORD=contrasena-admin-segura
+APP_COOKIE_SECURE=true
 ```
 
-6. Ejecuta una sola vez el contenido de `database/schema.sql` en la base MySQL administrada. Si la base ya tenia tablas, ejecuta `database/migration-payment-method.sql` y `database/migration-toppings.sql` en lugar del esquema inicial.
-7. Genera el dominio publico desde la configuracion del servicio web. La URL sera parecida a `https://cremo-deli-production.up.railway.app/`.
-8. Abre esa URL desde el celular usando datos moviles. Ya no dependera de la Wi-Fi ni de que tu PC este encendido.
+Si el proveedor entrega una URL JDBC completa, también puedes configurar `SPRING_DATASOURCE_URL` con formato `jdbc:postgresql://host:5432/base?sslmode=require`.
 
-El servicio usa automaticamente el puerto asignado por el hosting mediante `PORT`. La base MySQL administrada mantiene las ventas, inventario y precios aunque el servicio web se reinicie o se vuelva a desplegar. No uses una base instalada dentro del contenedor ni un archivo local para guardar datos.
+7. Despliega y genera el dominio público de Render. El puerto ya se obtiene automáticamente desde `PORT`.
+8. Prueba el login, inventario, registro de una venta, recarga de página y persistencia de los datos.
+
+No guardes datos en archivos dentro de Render y no actives `DATA_RESET_ENABLED`. La sesión puede perderse cuando el servicio se suspende y el usuario tendrá que iniciar sesión de nuevo.
 
 ## Comprobacion despues del despliegue
 
@@ -132,13 +138,13 @@ El servicio usa automaticamente el puerto asignado por el hosting mediante `PORT
 2. Define inventario y precio.
 3. Registra una venta con un vendedor y `Efectivo` o `Nequi`.
 4. Recarga la pagina y confirma que la venta siga visible.
-5. Consulta la tabla `sales` en MySQL para comprobar la persistencia.
+5. Consulta la tabla `sales` en PostgreSQL para comprobar la persistencia.
 
-Si la pagina no abre, revisa los logs del servicio web. Si aparece un error de conexion, revisa `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_SSL` y que MySQL permita conexiones desde el servicio web.
+Si la pagina no abre, revisa los logs del servicio web. Si aparece un error de conexion, revisa `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`, `DB_SSL_MODE` y que PostgreSQL permita conexiones desde Render.
 
 ## Reglas de la aplicacion
 
 - Medios de pago disponibles: `Efectivo` y `Nequi`.
 - Vendedores disponibles: `Juan Diego`, `Christopher`, `Salome`, `Daniel`, `Luisa` y `Otro`.
-- Las ventas, inventario y precio se guardan en MySQL mediante JPA.
+- Las ventas, inventario y precio se guardan en la base configurada mediante JPA; Render usa PostgreSQL.
 - Antes de desplegar, rota cualquier contrasena que haya estado escrita en archivos o compartida.
