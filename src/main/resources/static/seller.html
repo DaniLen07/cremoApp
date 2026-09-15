@@ -52,15 +52,30 @@
                     <fieldset>
                         <legend>Toppings · $500 cada uno por unidad</legend>
                         <div class="payment-options topping-options">
-                            <button type="button" class="topping-button" data-input="arequipe">
-                                <span>Arequipe</span><strong id="arequipeCount">0</strong>
-                            </button>
-                            <button type="button" class="topping-button" data-input="powderedMilk">
-                                <span>Leche en polvo</span><strong id="powderedMilkCount">0</strong>
-                            </button>
-                            <button type="button" class="topping-button" data-input="raisins">
-                                <span>Uvas pasas</span><strong id="raisinsCount">0</strong>
-                            </button>
+                            <div class="topping-button">
+                                <span>Arequipe</span>
+                                <div class="topping-stepper">
+                                    <button type="button" class="topping-adjust" data-input="arequipe" data-delta="-1" aria-label="Disminuir arequipe">−</button>
+                                    <strong id="arequipeCount">0</strong>
+                                    <button type="button" class="topping-adjust" data-input="arequipe" data-delta="1" aria-label="Aumentar arequipe">+</button>
+                                </div>
+                            </div>
+                            <div class="topping-button">
+                                <span>Leche en polvo</span>
+                                <div class="topping-stepper">
+                                    <button type="button" class="topping-adjust" data-input="powderedMilk" data-delta="-1" aria-label="Disminuir leche en polvo">−</button>
+                                    <strong id="powderedMilkCount">0</strong>
+                                    <button type="button" class="topping-adjust" data-input="powderedMilk" data-delta="1" aria-label="Aumentar leche en polvo">+</button>
+                                </div>
+                            </div>
+                            <div class="topping-button">
+                                <span>Uvas pasas</span>
+                                <div class="topping-stepper">
+                                    <button type="button" class="topping-adjust" data-input="raisins" data-delta="-1" aria-label="Disminuir uvas pasas">−</button>
+                                    <strong id="raisinsCount">0</strong>
+                                    <button type="button" class="topping-adjust" data-input="raisins" data-delta="1" aria-label="Aumentar uvas pasas">+</button>
+                                </div>
+                            </div>
                             <input type="hidden" id="arequipe" value="0">
                             <input type="hidden" id="powderedMilk" value="0">
                             <input type="hidden" id="raisins" value="0">

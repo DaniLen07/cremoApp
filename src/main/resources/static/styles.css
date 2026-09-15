@@ -516,6 +516,32 @@ fieldset {
     color: #fff;
 }
 
+.topping-stepper {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.topping-adjust {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    cursor: pointer;
+    font: 600 16px/1 'DM Sans';
+}
+
+.topping-adjust:hover,
+.topping-adjust:focus-visible {
+    border-color: var(--ink);
+    outline: 0;
+}
+
+.topping-button.is-selected .topping-adjust {
+    border-color: #777;
+}
+
 .sale-total {
     display: flex;
     justify-content: space-between;
