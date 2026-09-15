@@ -3,12 +3,14 @@ package com.deli.service;
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -26,9 +28,11 @@ import com.deli.dto.SellerUpdateRequest;
 import com.deli.model.DailyInventory;
 import com.deli.model.Product;
 import com.deli.model.Sale;
+import com.deli.model.SaleAudit;
 import com.deli.model.Seller;
 import com.deli.repository.InventoryRepository;
 import com.deli.repository.ProductRepository;
+import com.deli.repository.SaleAuditRepository;
 import com.deli.repository.SaleRepository;
 import com.deli.repository.SellerRepository;
 
@@ -41,16 +45,19 @@ public class CremoService {
     private final ProductRepository productRepository;
     private final InventoryRepository inventoryRepository;
     private final SaleRepository saleRepository;
+    private final SaleAuditRepository saleAuditRepository;
     private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
     private final String adminUsername;
 
     public CremoService(ProductRepository productRepository, InventoryRepository inventoryRepository,
-            SaleRepository saleRepository, SellerRepository sellerRepository, PasswordEncoder passwordEncoder,
+            SaleRepository saleRepository, SaleAuditRepository saleAuditRepository, SellerRepository sellerRepository,
+            PasswordEncoder passwordEncoder,
             @Value("${APP_ADMIN_USERNAME:juanm20}") String adminUsername) {
         this.productRepository = productRepository;
         this.inventoryRepository = inventoryRepository;
         this.saleRepository = saleRepository;
+        this.saleAuditRepository = saleAuditRepository;
         this.sellerRepository = sellerRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminUsername = adminUsername;
@@ -127,14 +134,17 @@ public class CremoService {
         inventory.setPowderedMilkQuantity(inventory.getPowderedMilkQuantity() - request.powderedMilk());
         inventory.setRaisinsQuantity(inventory.getRaisinsQuantity() - request.raisins());
         inventoryRepository.save(inventory);
-        return saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName,
+        Sale sale = saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName,
                 request.arequipe(), request.powderedMilk(), request.raisins()));
+        audit(sale, "CREATED", username);
+        return sale;
     }
 
     @Transactional
-    public Sale updateSale(Long id, SaleRequest request) {
+    public Sale updateSale(Long id, SaleRequest request, String username, boolean admin) {
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
+        assertSaleAccess(sale, username, admin);
 
         Product product = getProduct();
         DailyInventory inventory = getTodayInventory();
@@ -165,20 +175,36 @@ public class CremoService {
         sale = new Sale(product, request.quantity(), request.paymentMethod(), sale.getSellerName(),
                 request.arequipe(), request.powderedMilk(), request.raisins());
         sale.setIdForUpdate(id);
-        return saleRepository.save(sale);
+        Sale updated = saleRepository.save(sale);
+        audit(updated, "UPDATED", username);
+        return updated;
     }
 
     @Transactional
-    public void deleteSale(Long id) {
+    public void deleteSale(Long id, String username, boolean admin) {
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
+        assertSaleAccess(sale, username, admin);
         DailyInventory inventory = getTodayInventory();
         inventory.setAvailableQuantity(inventory.getAvailableQuantity() + sale.getQuantity());
         inventory.setArequipeQuantity(inventory.getArequipeQuantity() + sale.getArequipe());
         inventory.setPowderedMilkQuantity(inventory.getPowderedMilkQuantity() + sale.getPowderedMilk());
         inventory.setRaisinsQuantity(inventory.getRaisinsQuantity() + sale.getRaisins());
         inventoryRepository.save(inventory);
+        audit(sale, "DELETED", username);
         saleRepository.delete(sale);
+    }
+
+    private void assertSaleAccess(Sale sale, String username, boolean admin) {
+        if (!admin && (username == null || sellerRepository.findByUsernameAndActiveTrue(username)
+                .map(seller -> !seller.getName().equalsIgnoreCase(sale.getSellerName())).orElse(true))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Solo puedes modificar tus propias ventas");
+        }
+    }
+
+    private void audit(Sale sale, String action, String username) {
+        saleAuditRepository.save(new SaleAudit(sale.getId(), action, username, sale.getSellerName(),
+                LocalDateTime.now(COLOMBIA)));
     }
 
     public Map<String, Object> dashboard() {
@@ -224,6 +250,43 @@ public class CremoService {
         report.put("total", total);
         report.put("sales", sales);
         return report;
+    }
+
+    public List<Sale> filteredSales(LocalDate start, LocalDate end, String sellerName, String paymentMethod) {
+        LocalDate effectiveEnd = end == null ? LocalDate.now(COLOMBIA) : end;
+        LocalDate effectiveStart = start == null ? effectiveEnd.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY))
+                : start;
+        if (effectiveStart.isAfter(effectiveEnd)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La fecha inicial no puede ser posterior a la fecha final");
+        }
+        return saleRepository.findBySaleDateBetweenOrderByCreatedAtDesc(effectiveStart, effectiveEnd).stream()
+                .filter(sale -> sellerName == null || sellerName.isBlank()
+                        || sale.getSellerName().equalsIgnoreCase(sellerName))
+                .filter(sale -> paymentMethod == null || paymentMethod.isBlank()
+                        || sale.getPaymentMethod().name().equals(paymentMethod))
+                .collect(Collectors.toList());
+    }
+
+    public String salesCsv(LocalDate start, LocalDate end, String sellerName, String paymentMethod) {
+        StringBuilder csv = new StringBuilder(
+                "Fecha,Hora,Vendedor,Cantidad,Medio de pago,Arequipe,Leche en polvo,Uvas pasas,Total\n");
+        for (Sale sale : filteredSales(start, end, sellerName, paymentMethod)) {
+            csv.append(sale.getSaleDate()).append(',')
+                    .append(sale.getCreatedAt()).append(',')
+                    .append(csvValue(sale.getSellerName())).append(',')
+                    .append(sale.getQuantity()).append(',')
+                    .append(sale.getPaymentMethod()).append(',')
+                    .append(sale.getArequipe()).append(',')
+                    .append(sale.getPowderedMilk()).append(',')
+                    .append(sale.getRaisins()).append(',')
+                    .append(sale.getTotal()).append('\n');
+        }
+        return csv.toString();
+    }
+
+    private String csvValue(String value) {
+        return "\"" + (value == null ? "" : value.replace("\"", "\"\"")) + "\"";
     }
 
     public Product updatePrice(PriceRequest request) {

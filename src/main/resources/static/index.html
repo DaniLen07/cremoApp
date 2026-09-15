@@ -221,6 +221,20 @@
                     <h2>Resumen semanal</h2>
                 </div><button id="refreshButton" class="text-button" type="button">Actualizar datos ↻</button>
             </div>
+            <div class="report-filters">
+                <label>Desde<input id="reportStart" type="date"></label>
+                <label>Hasta<input id="reportEnd" type="date"></label>
+                <label>Vendedor<select id="reportSeller">
+                        <option value="">Todos</option>
+                    </select></label>
+                <label>Pago<select id="reportPayment">
+                        <option value="">Todos</option>
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="NEQUI">Nequi</option>
+                    </select></label>
+                <button id="applyReportFilters" class="secondary-button" type="button">Aplicar filtros</button>
+                <button id="exportReport" class="secondary-button" type="button">Exportar CSV</button>
+            </div>
             <div class="report-summary">
                 <div><span>Periodo</span><strong id="reportPeriod">Esta semana</strong></div>
                 <div><span>Unidades</span><strong id="reportUnits">0</strong></div>

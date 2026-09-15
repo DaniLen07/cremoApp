@@ -1064,6 +1064,174 @@ td:last-child {
     }
 }
 
+.report-filters {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(130px, 1fr)) auto auto;
+    gap: 10px;
+    align-items: end;
+    margin-bottom: 24px;
+}
+
+.report-filters label {
+    margin: 0;
+}
+
+.report-filters input,
+.report-filters select {
+    display: block;
+    width: 100%;
+    min-height: 44px;
+    margin-top: 7px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    font: inherit;
+}
+
+.report-filters .secondary-button {
+    min-width: 120px;
+}
+
+@media (max-width:760px) {
+    .report-filters {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .report-filters .secondary-button {
+        width: 100%;
+    }
+}
+
+@media (max-width:460px) {
+    .report-filters {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width:760px) {
+
+    .table-wrap table,
+    .seller-table-wrap table {
+        min-width: 0;
+    }
+
+    .table-wrap thead,
+    .seller-table-wrap thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0 0 0 0);
+    }
+
+    .table-wrap tbody,
+    .table-wrap tr,
+    .seller-table-wrap tbody,
+    .seller-table-wrap tr {
+        display: block;
+    }
+
+    .table-wrap tr,
+    .seller-table-wrap tr {
+        margin-bottom: 12px;
+        padding: 12px;
+        border: 1px solid var(--line);
+        background: var(--white);
+    }
+
+    .table-wrap td,
+    .seller-table-wrap td {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 14px;
+        min-height: 36px;
+        padding: 8px 0;
+        border-top: 0;
+        text-align: right;
+    }
+
+    .table-wrap td::before,
+    .seller-table-wrap td::before {
+        color: var(--muted);
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: .06em;
+        text-align: left;
+        text-transform: uppercase;
+    }
+
+    .table-wrap td:nth-child(1)::before {
+        content: 'Fecha';
+    }
+
+    .table-wrap td:nth-child(2)::before {
+        content: 'Hora';
+    }
+
+    .table-wrap td:nth-child(3)::before {
+        content: 'Vendedor';
+    }
+
+    .table-wrap td:nth-child(4)::before {
+        content: 'Cantidad';
+    }
+
+    .table-wrap td:nth-child(5)::before {
+        content: 'Pago';
+    }
+
+    .table-wrap td:nth-child(6)::before {
+        content: 'Toppings';
+    }
+
+    .table-wrap td:nth-child(7)::before {
+        content: 'Total';
+    }
+
+    .table-wrap td:nth-child(8)::before {
+        content: 'Acciones';
+    }
+
+    .seller-table-wrap td:nth-child(1)::before {
+        content: 'Vendedor';
+    }
+
+    .seller-table-wrap td:nth-child(2)::before {
+        content: 'Contacto';
+    }
+
+    .seller-table-wrap td:nth-child(3)::before {
+        content: 'Unidades';
+    }
+
+    .seller-table-wrap td:nth-child(4)::before {
+        content: 'Total';
+    }
+
+    .seller-table-wrap td:nth-child(5)::before {
+        content: 'Acciones';
+    }
+
+    .table-wrap td:last-child,
+    .seller-table-wrap td:last-child {
+        justify-content: space-between;
+        text-align: left;
+    }
+
+    .seller-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .seller-action-button {
+        min-width: 82px;
+        min-height: 40px;
+    }
+}
+
 .topbar-meta.offline .status-dot {
     background: var(--orange);
 }

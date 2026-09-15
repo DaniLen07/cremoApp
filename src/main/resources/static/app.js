@@ -188,6 +188,8 @@ async function loadSellers() {
     const select = $('sellerName');
     select.innerHTML = '<option value="" selected disabled>Selecciona un vendedor</option>'
         + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
+    $('reportSeller').innerHTML = '<option value="">Todos</option>'
+        + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
     $('editSellerName').innerHTML = sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
     const statsByName = new Map(stats.map(item => [item.sellerName, item]));
     $('sellerList').innerHTML = sellers.length
@@ -198,16 +200,20 @@ async function loadSellers() {
 async function loadReport() {
     let report;
     try {
-        const response = await apiRequest('/api/reports/weekly');
+        const params = new URLSearchParams();
+        [['reportStart', 'start'], ['reportEnd', 'end'], ['reportSeller', 'seller'], ['reportPayment', 'payment']]
+            .forEach(([id, key]) => { if ($(id).value) params.set(key, $(id).value); });
+        const response = await apiRequest(`/api/reports/weekly${params.toString() ? `?${params}` : ''}`);
         report = await response.json();
         writeCache(reportCacheKey, report);
     } catch (error) {
         report = readCache(reportCacheKey);
         if (!report) throw error;
     }
-    $('reportPeriod').textContent = `${report.start} / ${report.end}`;
+    $('reportPeriod').textContent = `${report.start || 'Periodo'} / ${report.end || 'actual'}`;
     $('reportUnits').textContent = report.units;
     $('reportTotal').textContent = money(report.total);
+    renderSales(report.sales || []);
 }
 
 async function loadDailyReport() {
@@ -226,6 +232,13 @@ async function refresh() {
     if (results.some(result => result.status === 'rejected')) {
         showFeedback($('saleFeedback'), 'Sin conexion. Mostrando los ultimos datos guardados.', true);
     }
+}
+
+function reportQueryString() {
+    const params = new URLSearchParams();
+    [['reportStart', 'start'], ['reportEnd', 'end'], ['reportSeller', 'seller'], ['reportPayment', 'payment']]
+        .forEach(([id, key]) => { if ($(id).value) params.set(key, $(id).value); });
+    return params.toString();
 }
 
 $('logoutButton').addEventListener('click', async () => {
@@ -434,6 +447,11 @@ $('priceForm').addEventListener('submit', async event => {
 });
 
 $('refreshButton').addEventListener('click', refresh);
+$('applyReportFilters').addEventListener('click', refresh);
+$('exportReport').addEventListener('click', () => {
+    const query = reportQueryString();
+    window.location.href = `/api/reports/export.csv${query ? `?${query}` : ''}`;
+});
 window.addEventListener('online', refresh);
 updateClock();
 apiRequest('/api/auth/me')

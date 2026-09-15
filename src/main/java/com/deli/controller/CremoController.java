@@ -1,12 +1,17 @@
 package com.deli.controller;
 
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
@@ -19,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -33,6 +39,7 @@ import com.deli.model.DailyInventory;
 import com.deli.model.Product;
 import com.deli.model.Sale;
 import com.deli.model.Seller;
+import com.deli.service.AppUserDetailsService;
 import com.deli.service.CremoService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -45,19 +52,28 @@ public class CremoController {
     private final CremoService service;
     private final AuthenticationManager authenticationManager;
     private final SecurityContextRepository securityContextRepository;
+    private final AppUserDetailsService userDetailsService;
 
     public CremoController(CremoService service, AuthenticationManager authenticationManager,
-            SecurityContextRepository securityContextRepository) {
+            SecurityContextRepository securityContextRepository, AppUserDetailsService userDetailsService) {
         this.service = service;
         this.authenticationManager = authenticationManager;
         this.securityContextRepository = securityContextRepository;
+        this.userDetailsService = userDetailsService;
     }
 
     @PostMapping("/auth/login")
     public Map<String, Object> login(@Valid @RequestBody LoginRequest request,
             HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.username(), request.password()));
+        } catch (AuthenticationException exception) {
+            userDetailsService.registerFailure(request.username());
+            throw exception;
+        }
+        userDetailsService.resetAttempts(request.username());
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
@@ -152,19 +168,41 @@ public class CremoController {
     }
 
     @PutMapping("/sales/{id}")
-    public Sale updateSale(@PathVariable Long id, @Valid @RequestBody SaleRequest request) {
-        return service.updateSale(id, request);
+    public Sale updateSale(@PathVariable Long id, @Valid @RequestBody SaleRequest request,
+            Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        return service.updateSale(id, request, authentication.getName(), admin);
     }
 
     @DeleteMapping("/sales/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteSale(@PathVariable Long id) {
-        service.deleteSale(id);
+    public void deleteSale(@PathVariable Long id, Authentication authentication) {
+        boolean admin = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        service.deleteSale(id, authentication.getName(), admin);
     }
 
     @GetMapping("/reports/weekly")
-    public Map<String, Object> weeklyReport() {
-        return service.weeklyReport();
+    public Map<String, Object> weeklyReport(@RequestParam(required = false) LocalDate start,
+            @RequestParam(required = false) LocalDate end, @RequestParam(required = false) String seller,
+            @RequestParam(required = false) String payment) {
+        var sales = service.filteredSales(start, end, seller, payment);
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("sales", sales);
+        report.put("units", sales.stream().mapToInt(Sale::getQuantity).sum());
+        report.put("total",
+                sales.stream().map(Sale::getTotal).reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add));
+        report.put("start", start);
+        report.put("end", end);
+        return report;
+    }
+
+    @GetMapping(value = "/reports/export.csv", produces = "text/csv")
+    public ResponseEntity<String> exportSales(@RequestParam(required = false) LocalDate start,
+            @RequestParam(required = false) LocalDate end, @RequestParam(required = false) String seller,
+            @RequestParam(required = false) String payment) {
+        return ResponseEntity.ok().header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ventas.csv")
+                .contentType(MediaType.parseMediaType("text/csv; charset=UTF-8"))
+                .body("\uFEFF" + service.salesCsv(start, end, seller, payment));
     }
 
     @GetMapping("/reports/daily")

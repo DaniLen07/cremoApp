@@ -39,4 +39,5 @@ public interface SaleRepository extends JpaRepository<Sale, Long> {
 
     @Query("select s from Sale s where s.sellerName = :sellerName order by s.createdAt desc, s.id desc")
     List<Sale> findBySellerNameOrderByCreatedAtDesc(String sellerName);
+
 }
