@@ -7,6 +7,7 @@ let currentPrice = 5000;
 let initialStock = 0;
 let currentUser = null;
 let toppingStock = { arequipe: 0, powderedMilk: 0, raisins: 0 };
+let editToppingStock = { editArequipe: 0, editPowderedMilk: 0, editRaisins: 0 };
 
 function csrfToken() {
     return document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
@@ -335,7 +336,7 @@ async function editSaleById(id) {
 }
 
 function setEditTopping(inputId, value) {
-    $(inputId).value = Math.max(0, Number(value) || 0);
+    $(inputId).value = Math.min(editToppingStock[inputId] ?? Number.MAX_SAFE_INTEGER, Math.max(0, Number(value) || 0));
     $(`${inputId}Count`).textContent = $(inputId).value;
 }
 
@@ -344,6 +345,11 @@ function openSaleEditModal(sale) {
     $('editQuantity').value = sale.quantity;
     $('editPaymentMethod').value = sale.paymentMethod;
     $('editSellerName').value = sale.sellerName;
+    editToppingStock = {
+        editArequipe: toppingStock.arequipe + Number(sale.arequipe || 0),
+        editPowderedMilk: toppingStock.powderedMilk + Number(sale.powderedMilk || 0),
+        editRaisins: toppingStock.raisins + Number(sale.raisins || 0)
+    };
     setEditTopping('editArequipe', sale.arequipe);
     setEditTopping('editPowderedMilk', sale.powderedMilk);
     setEditTopping('editRaisins', sale.raisins);

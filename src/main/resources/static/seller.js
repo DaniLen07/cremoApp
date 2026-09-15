@@ -2,6 +2,7 @@ const money = value => new Intl.NumberFormat('es-CO', { style: 'currency', curre
 const $ = id => document.getElementById(id);
 let currentPrice = 5000;
 let inventoryStock = { arequipeQuantity: 0, powderedMilkQuantity: 0, raisinsQuantity: 0 };
+let editToppingStock = { editArequipe: 0, editPowderedMilk: 0, editRaisins: 0 };
 
 function csrfToken() {
     return document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
@@ -98,7 +99,7 @@ $('sellerSales').addEventListener('click', async event => {
 });
 
 function setEditTopping(inputId, value) {
-    $(inputId).value = Math.max(0, Number(value) || 0);
+    $(inputId).value = Math.min(editToppingStock[inputId] ?? Number.MAX_SAFE_INTEGER, Math.max(0, Number(value) || 0));
     $(`${inputId}Count`).textContent = $(inputId).value;
 }
 
@@ -106,6 +107,11 @@ function openSaleEditModal(sale) {
     $('editSaleId').value = sale.id;
     $('editQuantity').value = sale.quantity;
     $('editPaymentMethod').value = sale.paymentMethod;
+    editToppingStock = {
+        editArequipe: inventoryStock.arequipeQuantity + Number(sale.arequipe || 0),
+        editPowderedMilk: inventoryStock.powderedMilkQuantity + Number(sale.powderedMilk || 0),
+        editRaisins: inventoryStock.raisinsQuantity + Number(sale.raisins || 0)
+    };
     setEditTopping('editArequipe', sale.arequipe);
     setEditTopping('editPowderedMilk', sale.powderedMilk);
     setEditTopping('editRaisins', sale.raisins);
