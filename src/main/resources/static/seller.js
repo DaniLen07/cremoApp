@@ -77,16 +77,7 @@ $('sellerSales').addEventListener('click', async event => {
     if (editButton) {
         try {
             const sale = (await (await apiRequest('/api/seller/me/stats')).json()).sales.find(item => String(item.id) === String(editButton.dataset.id));
-            const quantity = Number(prompt('Cantidad de unidades', sale?.quantity ?? 1));
-            if (!Number.isFinite(quantity) || quantity < 1) return;
-            const arequipe = Number(prompt('Cantidad de arequipe', sale?.arequipe ?? 0));
-            const powderedMilk = Number(prompt('Cantidad de leche en polvo', sale?.powderedMilk ?? 0));
-            const raisins = Number(prompt('Cantidad de uvas pasas', sale?.raisins ?? 0));
-            const paymentMethod = prompt('Medio de pago (EFECTIVO/NEQUI)', sale?.paymentMethod ?? 'EFECTIVO');
-            await apiRequest(`/api/sales/${editButton.dataset.id}`, { method: 'PUT', body: JSON.stringify({ quantity, paymentMethod, sellerName: sale?.sellerName || 'self', arequipe, powderedMilk, raisins }) });
-            $('saleFeedback').textContent = 'Venta actualizada correctamente.';
-            $('saleFeedback').classList.remove('error');
-            await load();
+            if (sale) openSaleEditModal(sale);
         } catch (error) {
             $('saleFeedback').textContent = error.message;
             $('saleFeedback').classList.add('error');
@@ -103,6 +94,52 @@ $('sellerSales').addEventListener('click', async event => {
             $('saleFeedback').textContent = error.message;
             $('saleFeedback').classList.add('error');
         }
+    }
+});
+
+function setEditTopping(inputId, value) {
+    $(inputId).value = Math.max(0, Number(value) || 0);
+    $(`${inputId}Count`).textContent = $(inputId).value;
+}
+
+function openSaleEditModal(sale) {
+    $('editSaleId').value = sale.id;
+    $('editQuantity').value = sale.quantity;
+    $('editPaymentMethod').value = sale.paymentMethod;
+    setEditTopping('editArequipe', sale.arequipe);
+    setEditTopping('editPowderedMilk', sale.powderedMilk);
+    setEditTopping('editRaisins', sale.raisins);
+    $('editSaleFeedback').textContent = '';
+    $('saleEditModal').hidden = false;
+    $('editQuantity').focus();
+}
+
+function closeSaleEditModal() { $('saleEditModal').hidden = true; }
+
+document.querySelectorAll('.topping-adjust[data-edit-input]').forEach(button => button.addEventListener('click', () => {
+    const inputId = button.dataset.editInput;
+    setEditTopping(inputId, Number($(inputId).value) + Number(button.dataset.delta));
+}));
+$('closeSaleEdit').addEventListener('click', closeSaleEditModal);
+$('cancelSaleEdit').addEventListener('click', closeSaleEditModal);
+$('saleEditModal').addEventListener('click', event => { if (event.target === $('saleEditModal')) closeSaleEditModal(); });
+$('saleEditForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const toppings = ['editArequipe', 'editPowderedMilk', 'editRaisins'].map(id => Number($(id).value) || 0);
+    if (toppings.filter(value => value > 0).length > 3) {
+        $('editSaleFeedback').textContent = 'Una venta puede tener máximo 3 tipos de toppings.';
+        $('editSaleFeedback').classList.add('error');
+        return;
+    }
+    try {
+        await apiRequest(`/api/sales/${$('editSaleId').value}`, { method: 'PUT', body: JSON.stringify({ quantity: Number($('editQuantity').value), paymentMethod: $('editPaymentMethod').value, sellerName: 'self', arequipe: toppings[0], powderedMilk: toppings[1], raisins: toppings[2] }) });
+        closeSaleEditModal();
+        $('saleFeedback').textContent = 'Venta actualizada correctamente.';
+        $('saleFeedback').classList.remove('error');
+        await load();
+    } catch (error) {
+        $('editSaleFeedback').textContent = error.message;
+        $('editSaleFeedback').classList.add('error');
     }
 });
 $('decreaseQuantity').addEventListener('click', event => { $('quantity').value = Math.max(1, Number($('quantity').value) - 1); updateTotal(); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); }); $('increaseQuantity').addEventListener('click', event => { $('quantity').value = Number($('quantity').value) + 1; updateTotal(); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); }); $('quantity').addEventListener('input', updateTotal);['arequipe', 'powderedMilk', 'raisins'].forEach(id => { $(id).addEventListener('change', () => { updateToppingButton(id); updateTotal(); }); }); document.querySelectorAll('.topping-adjust').forEach(button => button.addEventListener('click', () => { const inputId = button.dataset.input; setToppingValue(inputId, Number($(inputId).value) + Number(button.dataset.delta)); })); $('logoutButton').addEventListener('click', async () => { try { await apiRequest('/api/auth/logout', { method: 'POST' }); } finally { window.location.replace('/login.html'); } }); updateClock(); setInterval(updateClock, 30000); load().catch(() => window.location.replace('/login.html')); setInterval(() => load().catch(() => { }), 15000);
