@@ -17,4 +17,15 @@ public record SaleRequest(
         public SaleRequest(int quantity, PaymentMethod paymentMethod, String sellerName) {
                 this(quantity, paymentMethod, sellerName, 0, 0, 0);
         }
+
+        public int toppingTypesCount() {
+                int count = 0;
+                if (arequipe > 0)
+                        count++;
+                if (powderedMilk > 0)
+                        count++;
+                if (raisins > 0)
+                        count++;
+                return count;
+        }
 }

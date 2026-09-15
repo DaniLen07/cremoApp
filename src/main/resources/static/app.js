@@ -99,6 +99,9 @@ function renderInventory(inventory) {
     const percentage = initialStock ? Math.round((available / initialStock) * 100) : 0;
     $('inventoryValue').textContent = available;
     $('inventoryInput').value = available;
+    $('inventoryArequipe').value = inventory.arequipeQuantity || 0;
+    $('inventoryPowderedMilk').value = inventory.powderedMilkQuantity || 0;
+    $('inventoryRaisins').value = inventory.raisinsQuantity || 0;
     $('stockPercent').textContent = `${percentage}%`;
     $('stockBar').style.width = `${percentage}%`;
     $('stockMessage').textContent = available ? `${available} unidades listas para vender.` : 'No hay unidades disponibles hoy.';
@@ -276,6 +279,11 @@ $('saleForm').addEventListener('submit', async event => {
     const arequipe = Number($('arequipe').value) || 0;
     const powderedMilk = Number($('powderedMilk').value) || 0;
     const raisins = Number($('raisins').value) || 0;
+    const selectedTypes = [arequipe, powderedMilk, raisins].filter(value => value > 0).length;
+    if (selectedTypes > 3) {
+        showFeedback(feedback, 'Una venta puede tener máximo 3 tipos de toppings.', true);
+        return;
+    }
     try {
         await apiRequest('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName, arequipe, powderedMilk, raisins }) });
         showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = ''; $('arequipe').value = 0; $('powderedMilk').value = 0; $('raisins').value = 0; updateSaleTotal(); await refresh();
@@ -323,7 +331,16 @@ $('dailySalesTable').addEventListener('click', async event => {
 $('inventoryForm').addEventListener('submit', async event => {
     event.preventDefault();
     try {
-        await apiRequest('/api/inventory/today', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity: Number($('inventoryInput').value) }) });
+        await apiRequest('/api/inventory/today', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                quantity: Number($('inventoryInput').value) || 0,
+                arequipeQuantity: Number($('inventoryArequipe').value) || 0,
+                powderedMilkQuantity: Number($('inventoryPowderedMilk').value) || 0,
+                raisinsQuantity: Number($('inventoryRaisins').value) || 0
+            })
+        });
         showFeedback($('inventoryFeedback'), 'Inventario actualizado.');
         await refresh();
     } catch (error) { showFeedback($('inventoryFeedback'), error.message, true); }

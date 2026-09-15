@@ -28,4 +28,11 @@ class SaleSellerTest {
         assertEquals(0, sale.getTotal().compareTo(new BigDecimal("13000")));
         assertEquals(0, sale.getToppingsTotal().compareTo(new BigDecimal("3000")));
     }
+
+    @Test
+    void saleRequestCountsSelectedToppingTypes() {
+        SaleRequest request = new SaleRequest(1, PaymentMethod.EFECTIVO, "Daniel", 2, 1, 1);
+
+        assertEquals(3, request.toppingTypesCount());
+    }
 }

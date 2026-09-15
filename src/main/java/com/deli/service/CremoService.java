@@ -92,6 +92,10 @@ public class CremoService {
         if (request.paymentMethod() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecciona un medio de pago");
         }
+        if (request.toppingTypesCount() > 3) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Una venta puede tener máximo 3 tipos de toppings");
+        }
 
         String sellerName = request.sellerName() == null ? "No especificado" : request.sellerName().trim();
         if (!admin && username != null) {

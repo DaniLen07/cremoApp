@@ -96,9 +96,13 @@
                         <h2>Inventario</h2>
                     </div><span class="panel-number">02</span>
                 </div>
-                <form id="inventoryForm" class="inline-form"><label>Unidades disponibles<input id="inventoryInput"
-                            type="number" min="0" required></label><button class="secondary-button"
-                        type="submit">Actualizar</button></form>
+                <form id="inventoryForm" class="inline-form">
+                    <label>Unidades disponibles<input id="inventoryInput" type="number" min="0" required></label>
+                    <label>Arequipe<input id="inventoryArequipe" type="number" min="0" required></label>
+                    <label>Leche en polvo<input id="inventoryPowderedMilk" type="number" min="0" required></label>
+                    <label>Uvas pasas<input id="inventoryRaisins" type="number" min="0" required></label>
+                    <button class="secondary-button" type="submit">Actualizar</button>
+                </form>
                 <div class="stock-visual">
                     <div class="stock-header"><span>Estado del inventario</span><strong id="stockPercent">0%</strong>
                     </div>
