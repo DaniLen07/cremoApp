@@ -27,6 +27,16 @@ async function apiRequest(url, options = {}) {
     return response;
 }
 
+function showFeedback(element, message, error = false) {
+    clearTimeout(element.feedbackTimer);
+    element.textContent = message;
+    element.classList.toggle('error', error);
+    element.feedbackTimer = setTimeout(() => {
+        element.textContent = '';
+        element.classList.remove('error');
+    }, 5000);
+}
+
 function updateClock() { const now = new Date(); $('currentDate').textContent = now.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }); $('currentTime').textContent = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); }
 function selectedToppings() {
     return ['arequipe', 'powderedMilk', 'raisins']
@@ -70,7 +80,7 @@ function toppingsSummary(sale) { const parts = []; if (Number(sale.arequipe) > 0
 function renderSales(sales) { $('sellerSales').innerHTML = sales.length ? `<table><thead><tr><th>Fecha</th><th>Hora</th><th>Cantidad</th><th>Medio de pago</th><th>Toppings</th><th>Total</th><th>Acciones</th></tr></thead><tbody>${sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${toppingsSummary(sale)}</td><td>${money(sale.total)}</td><td><button type="button" class="seller-action-button edit-sale" data-id="${sale.id}">Editar</button><button type="button" class="seller-action-button delete-seller" data-id="${sale.id}">Eliminar</button></td></tr>`).join('')}</tbody></table>` : '<p class="empty-state">Aún no tienes ventas registradas.</p>'; }
 async function load() { const user = await (await apiRequest('/api/auth/me')).json(); if (user.role !== 'SELLER') { window.location.replace('/'); return; } $('userLabel').textContent = `${user.username} · Vendedor`; const product = await (await apiRequest('/api/product/current')).json(); currentPrice = Number(product.price); const inventory = await (await apiRequest('/api/inventory/today')).json(); inventoryStock = { arequipeQuantity: Number(inventory.arequipeQuantity) || 0, powderedMilkQuantity: Number(inventory.powderedMilkQuantity) || 0, raisinsQuantity: Number(inventory.raisinsQuantity) || 0 };['arequipe', 'powderedMilk', 'raisins'].forEach(updateToppingButton); $('availableProduct').textContent = inventory.availableQuantity || 0; const stats = await (await apiRequest('/api/seller/me/stats')).json(); $('todayUnits').textContent = stats.todayUnits; $('todayTotal').textContent = money(stats.todayTotal); $('totalUnits').textContent = stats.totalUnits; $('totalAmount').textContent = money(stats.totalAmount); renderSales(stats.sales); updateTotal(); }
 
-$('saleForm').addEventListener('submit', async event => { event.preventDefault(); const validationError = validateSelectedToppings(); if (validationError) { $('saleFeedback').textContent = validationError; $('saleFeedback').classList.add('error'); return; } try { await apiRequest('/api/sales', { method: 'POST', body: JSON.stringify({ quantity: Number($('quantity').value), paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value, sellerName: 'self', arequipe: Number($('arequipe').value) || 0, powderedMilk: Number($('powderedMilk').value) || 0, raisins: Number($('raisins').value) || 0 }) }); $('quantity').value = 1;['arequipe', 'powderedMilk', 'raisins'].forEach(id => setToppingValue(id, 0)); $('saleFeedback').textContent = 'Venta registrada correctamente.'; $('saleFeedback').classList.remove('error'); await load(); } catch (error) { $('saleFeedback').textContent = error.message; $('saleFeedback').classList.add('error'); } });
+$('saleForm').addEventListener('submit', async event => { event.preventDefault(); const validationError = validateSelectedToppings(); if (validationError) { showFeedback($('saleFeedback'), validationError, true); return; } try { await apiRequest('/api/sales', { method: 'POST', body: JSON.stringify({ quantity: Number($('quantity').value), paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value, sellerName: 'self', arequipe: Number($('arequipe').value) || 0, powderedMilk: Number($('powderedMilk').value) || 0, raisins: Number($('raisins').value) || 0 }) }); $('quantity').value = 1;['arequipe', 'powderedMilk', 'raisins'].forEach(id => setToppingValue(id, 0)); showFeedback($('saleFeedback'), 'Venta registrada correctamente.'); await load(); } catch (error) { showFeedback($('saleFeedback'), error.message, true); } });
 
 $('sellerSales').addEventListener('click', async event => {
     const editButton = event.target.closest('.edit-sale');
@@ -80,20 +90,17 @@ $('sellerSales').addEventListener('click', async event => {
             const sale = (await (await apiRequest('/api/seller/me/stats')).json()).sales.find(item => String(item.id) === String(editButton.dataset.id));
             if (sale) openSaleEditModal(sale);
         } catch (error) {
-            $('saleFeedback').textContent = error.message;
-            $('saleFeedback').classList.add('error');
+            showFeedback($('saleFeedback'), error.message, true);
         }
         return;
     }
     if (deleteButton && window.confirm('¿Eliminar esta venta?')) {
         try {
             await apiRequest(`/api/sales/${deleteButton.dataset.id}`, { method: 'DELETE' });
-            $('saleFeedback').textContent = 'Venta eliminada correctamente.';
-            $('saleFeedback').classList.remove('error');
+            showFeedback($('saleFeedback'), 'Venta eliminada correctamente.');
             await load();
         } catch (error) {
-            $('saleFeedback').textContent = error.message;
-            $('saleFeedback').classList.add('error');
+            showFeedback($('saleFeedback'), error.message, true);
         }
     }
 });
@@ -116,6 +123,7 @@ function openSaleEditModal(sale) {
     setEditTopping('editPowderedMilk', sale.powderedMilk);
     setEditTopping('editRaisins', sale.raisins);
     $('editSaleFeedback').textContent = '';
+    $('editSaleFeedback').classList.remove('error');
     $('saleEditModal').hidden = false;
     $('editQuantity').focus();
 }
@@ -133,19 +141,16 @@ $('saleEditForm').addEventListener('submit', async event => {
     event.preventDefault();
     const toppings = ['editArequipe', 'editPowderedMilk', 'editRaisins'].map(id => Number($(id).value) || 0);
     if (toppings.filter(value => value > 0).length > 3) {
-        $('editSaleFeedback').textContent = 'Una venta puede tener máximo 3 tipos de toppings.';
-        $('editSaleFeedback').classList.add('error');
+        showFeedback($('editSaleFeedback'), 'Una venta puede tener máximo 3 tipos de toppings.', true);
         return;
     }
     try {
         await apiRequest(`/api/sales/${$('editSaleId').value}`, { method: 'PUT', body: JSON.stringify({ quantity: Number($('editQuantity').value), paymentMethod: $('editPaymentMethod').value, sellerName: 'self', arequipe: toppings[0], powderedMilk: toppings[1], raisins: toppings[2] }) });
         closeSaleEditModal();
-        $('saleFeedback').textContent = 'Venta actualizada correctamente.';
-        $('saleFeedback').classList.remove('error');
+        showFeedback($('saleFeedback'), 'Venta actualizada correctamente.');
         await load();
     } catch (error) {
-        $('editSaleFeedback').textContent = error.message;
-        $('editSaleFeedback').classList.add('error');
+        showFeedback($('editSaleFeedback'), error.message, true);
     }
 });
 $('decreaseQuantity').addEventListener('click', event => { $('quantity').value = Math.max(1, Number($('quantity').value) - 1); updateTotal(); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); }); $('increaseQuantity').addEventListener('click', event => { $('quantity').value = Number($('quantity').value) + 1; updateTotal(); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); }); $('quantity').addEventListener('input', updateTotal);['arequipe', 'powderedMilk', 'raisins'].forEach(id => { $(id).addEventListener('change', () => { updateToppingButton(id); updateTotal(); }); }); document.querySelectorAll('.topping-adjust').forEach(button => button.addEventListener('click', () => { const inputId = button.dataset.input; setToppingValue(inputId, Number($(inputId).value) + Number(button.dataset.delta)); })); $('logoutButton').addEventListener('click', async () => { try { await apiRequest('/api/auth/logout', { method: 'POST' }); } finally { window.location.replace('/login.html'); } }); updateClock(); setInterval(updateClock, 30000); load().catch(() => window.location.replace('/login.html')); setInterval(() => load().catch(() => { }), 15000);

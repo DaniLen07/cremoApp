@@ -68,8 +68,13 @@ function writeCache(key, value) {
 }
 
 function showFeedback(element, message, error = false) {
+    clearTimeout(element.feedbackTimer);
     element.textContent = message;
     element.classList.toggle('error', error);
+    element.feedbackTimer = setTimeout(() => {
+        element.textContent = '';
+        element.classList.remove('error');
+    }, 5000);
 }
 
 function updateClock() {
@@ -182,6 +187,7 @@ async function loadSellerPrice() {
 async function loadSellers() {
     const response = await apiRequest('/api/sellers');
     const sellers = await response.json();
+    const selectedReportSeller = $('reportSeller').value;
     const stats = currentUser.role === 'ADMIN'
         ? await (await apiRequest('/api/admin/seller-stats')).json()
         : [];
@@ -190,6 +196,7 @@ async function loadSellers() {
         + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
     $('reportSeller').innerHTML = '<option value="">Todos</option>'
         + sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
+    $('reportSeller').value = sellers.some(seller => seller.name === selectedReportSeller) ? selectedReportSeller : '';
     $('editSellerName').innerHTML = sellers.map(seller => `<option value="${seller.name}">${seller.name}</option>`).join('');
     const statsByName = new Map(stats.map(item => [item.sellerName, item]));
     $('sellerList').innerHTML = sellers.length
@@ -208,7 +215,7 @@ async function loadReport() {
         writeCache(reportCacheKey, report);
     } catch (error) {
         report = readCache(reportCacheKey);
-        if (!report) throw error;
+        if (!report || reportQueryString()) throw error;
     }
     $('reportPeriod').textContent = `${report.start || 'Periodo'} / ${report.end || 'actual'}`;
     $('reportUnits').textContent = report.units;
@@ -281,7 +288,7 @@ $('sellerList').addEventListener('click', event => {
         $('sellerEditForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else if (deleteButton && window.confirm(`¿Eliminar a ${deleteButton.dataset.name}?`)) {
         apiRequest(`/api/sellers/${deleteButton.dataset.id}`, { method: 'DELETE' })
-            .then(loadSellers)
+            .then(() => { showFeedback($('sellerFeedback'), 'Vendedor eliminado correctamente.'); return loadSellers(); })
             .catch(error => showFeedback($('sellerFeedback'), error.message, true));
     }
 });
@@ -384,8 +391,7 @@ $('saleEditForm').addEventListener('submit', async event => {
     event.preventDefault();
     const toppings = ['editArequipe', 'editPowderedMilk', 'editRaisins'].map(id => Number($(id).value) || 0);
     if (toppings.filter(value => value > 0).length > 3) {
-        $('editSaleFeedback').textContent = 'Una venta puede tener máximo 3 tipos de toppings.';
-        $('editSaleFeedback').classList.add('error');
+        showFeedback($('editSaleFeedback'), 'Una venta puede tener máximo 3 tipos de toppings.', true);
         return;
     }
     try {
@@ -394,8 +400,7 @@ $('saleEditForm').addEventListener('submit', async event => {
         showFeedback($('saleFeedback'), 'Venta actualizada correctamente.');
         await refresh();
     } catch (error) {
-        $('editSaleFeedback').textContent = error.message;
-        $('editSaleFeedback').classList.add('error');
+        showFeedback($('editSaleFeedback'), error.message, true);
     }
 });
 
@@ -405,6 +410,7 @@ $('salesTable').addEventListener('click', async event => {
     if (editButton) { await editSaleById(editButton.dataset.id); return; }
     if (deleteButton && window.confirm('¿Eliminar esta venta?')) {
         await apiRequest(`/api/sales/${deleteButton.dataset.id}`, { method: 'DELETE' });
+        showFeedback($('saleFeedback'), 'Venta eliminada correctamente.');
         await refresh();
     }
 });
@@ -415,6 +421,7 @@ $('dailySalesTable').addEventListener('click', async event => {
     if (editButton) { await editSaleById(editButton.dataset.id); return; }
     if (deleteButton && window.confirm('¿Eliminar esta venta?')) {
         await apiRequest(`/api/sales/${deleteButton.dataset.id}`, { method: 'DELETE' });
+        showFeedback($('saleFeedback'), 'Venta eliminada correctamente.');
         await refresh();
     }
 });
