@@ -3,11 +3,15 @@
 :root {
     --ink: #171717;
     --muted: #777;
-    --line: #dedede;
-    --paper: #f5f5f2;
-    --white: #fff;
-    --soft: #ecece8;
-    --green: #a4c884;
+    --line: #d8d1c8;
+    --paper: #f7eee2;
+    --white: #fffdf9;
+    --soft: #eee3d5;
+    --green: #d29a18;
+    --chocolate: #572d20;
+    --gold: #e1a51b;
+    --gold-dark: #b9780e;
+    --danger: #a44b4b;
 }
 
 * {
@@ -1059,4 +1063,54 @@ td:last-child {
         width: 100%;
         justify-content: space-between;
     }
+}
+
+.topbar-meta.offline .status-dot {
+    background: #d97948;
+}
+
+.quantity-button:hover,
+.quantity-button.is-active,
+.payment-option input:checked+span,
+.topping-button:hover,
+.topping-button.is-selected {
+    border-color: var(--gold);
+    background: var(--gold);
+}
+
+.topping-adjust:hover,
+.topping-adjust:focus-visible {
+    border-color: var(--gold-dark);
+}
+
+.topping-button.is-selected .topping-adjust {
+    border-color: #f3d58f;
+}
+
+.primary-button:hover,
+.secondary-button:hover,
+.icon-button:hover {
+    background: var(--chocolate);
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible,
+.icon-button:focus-visible,
+.quantity-button:focus-visible,
+.text-button:focus-visible {
+    outline-color: var(--gold);
+}
+
+.sale-total small,
+.feedback.success {
+    color: var(--gold-dark);
+}
+
+.seller-action-button.delete-seller:hover,
+.feedback.error {
+    border-color: var(--danger);
+}
+
+.seller-action-button.delete-seller:hover {
+    background: var(--danger);
 }
