@@ -481,6 +481,41 @@ fieldset {
     color: #fff;
 }
 
+.topping-button {
+    display: flex;
+    min-height: 57px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: #555;
+    cursor: pointer;
+    font: inherit;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease;
+}
+
+.topping-button span {
+    font-size: 11px;
+}
+
+.topping-button strong {
+    color: #888;
+    font-size: 13px;
+}
+
+.topping-button:hover,
+.topping-button.is-selected {
+    border-color: var(--ink);
+    background: var(--ink);
+    color: #fff;
+}
+
+.topping-button.is-selected strong {
+    color: #fff;
+}
+
 .sale-total {
     display: flex;
     justify-content: space-between;

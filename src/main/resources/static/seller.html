@@ -52,12 +52,18 @@
                     <fieldset>
                         <legend>Toppings · $500 cada uno por unidad</legend>
                         <div class="payment-options topping-options">
-                            <label class="payment-option"><span>Arequipe</span><input type="number" id="arequipe"
-                                    min="0" value="0" style="width:72px; margin-left:8px;"></label>
-                            <label class="payment-option"><span>Leche en polvo</span><input type="number"
-                                    id="powderedMilk" min="0" value="0" style="width:72px; margin-left:8px;"></label>
-                            <label class="payment-option"><span>Uvas pasas</span><input type="number" id="raisins"
-                                    min="0" value="0" style="width:72px; margin-left:8px;"></label>
+                            <button type="button" class="topping-button" data-input="arequipe">
+                                <span>Arequipe</span><strong id="arequipeCount">0</strong>
+                            </button>
+                            <button type="button" class="topping-button" data-input="powderedMilk">
+                                <span>Leche en polvo</span><strong id="powderedMilkCount">0</strong>
+                            </button>
+                            <button type="button" class="topping-button" data-input="raisins">
+                                <span>Uvas pasas</span><strong id="raisinsCount">0</strong>
+                            </button>
+                            <input type="hidden" id="arequipe" value="0">
+                            <input type="hidden" id="powderedMilk" value="0">
+                            <input type="hidden" id="raisins" value="0">
                         </div>
                     </fieldset>
                     <fieldset>
