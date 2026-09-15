@@ -6,6 +6,7 @@ const requestTimeout = 5000;
 let currentPrice = 5000;
 let initialStock = 0;
 let currentUser = null;
+let toppingStock = { arequipe: 0, powderedMilk: 0, raisins: 0 };
 
 function csrfToken() {
     return document.cookie.split('; ').find(cookie => cookie.startsWith('XSRF-TOKEN='))?.split('=')[1];
@@ -88,6 +89,19 @@ function updateSaleTotal() {
     $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal);
 }
 
+function updateToppingButton(inputId) {
+    const value = Number($(inputId).value) || 0;
+    const button = document.querySelector(`[data-input="${inputId}"]`).closest('.topping-button');
+    $(`${inputId}Count`).textContent = value;
+    button.classList.toggle('is-selected', value > 0);
+}
+
+function setToppingValue(inputId, value) {
+    $(inputId).value = Math.min(toppingStock[inputId], Math.max(0, value));
+    updateToppingButton(inputId);
+    updateSaleTotal();
+}
+
 function setQuantity(value) {
     $('quantity').value = Math.max(1, Number(value) || 1);
     updateSaleTotal();
@@ -102,6 +116,12 @@ function renderInventory(inventory) {
     $('inventoryArequipe').value = inventory.arequipeQuantity || 0;
     $('inventoryPowderedMilk').value = inventory.powderedMilkQuantity || 0;
     $('inventoryRaisins').value = inventory.raisinsQuantity || 0;
+    toppingStock = {
+        arequipe: Number(inventory.arequipeQuantity) || 0,
+        powderedMilk: Number(inventory.powderedMilkQuantity) || 0,
+        raisins: Number(inventory.raisinsQuantity) || 0
+    };
+    ['arequipe', 'powderedMilk', 'raisins'].forEach(updateToppingButton);
     $('stockPercent').textContent = `${percentage}%`;
     $('stockBar').style.width = `${percentage}%`;
     $('stockMessage').textContent = available ? `${available} unidades listas para vender.` : 'No hay unidades disponibles hoy.';
@@ -269,7 +289,11 @@ $('sellerEditForm').addEventListener('submit', async event => {
 $('decreaseQuantity').addEventListener('click', event => { setQuantity(Number($('quantity').value) - 1); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); });
 $('increaseQuantity').addEventListener('click', event => { setQuantity(Number($('quantity').value) + 1); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); });
 $('quantity').addEventListener('input', updateSaleTotal);
-['arequipe', 'powderedMilk', 'raisins'].forEach(id => $(id).addEventListener('change', updateSaleTotal));
+['arequipe', 'powderedMilk', 'raisins'].forEach(id => $(id).addEventListener('change', () => { updateToppingButton(id); updateSaleTotal(); }));
+document.querySelectorAll('.topping-adjust').forEach(button => button.addEventListener('click', () => {
+    const inputId = button.dataset.input;
+    setToppingValue(inputId, Number($(inputId).value) + Number(button.dataset.delta));
+}));
 $('saleForm').addEventListener('submit', async event => {
     event.preventDefault();
     const feedback = $('saleFeedback');
@@ -284,9 +308,20 @@ $('saleForm').addEventListener('submit', async event => {
         showFeedback(feedback, 'Una venta puede tener máximo 3 tipos de toppings.', true);
         return;
     }
+    const stockError = arequipe > toppingStock.arequipe
+        ? `No hay suficiente arequipe disponible hoy (${toppingStock.arequipe}).`
+        : powderedMilk > toppingStock.powderedMilk
+            ? `No hay suficiente leche en polvo disponible hoy (${toppingStock.powderedMilk}).`
+            : raisins > toppingStock.raisins
+                ? `No hay suficientes uvas pasas disponibles hoy (${toppingStock.raisins}).`
+                : null;
+    if (stockError) {
+        showFeedback(feedback, stockError, true);
+        return;
+    }
     try {
         await apiRequest('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName, arequipe, powderedMilk, raisins }) });
-        showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = ''; $('arequipe').value = 0; $('powderedMilk').value = 0; $('raisins').value = 0; updateSaleTotal(); await refresh();
+        showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = '';['arequipe', 'powderedMilk', 'raisins'].forEach(id => setToppingValue(id, 0)); await refresh();
     } catch (error) {
         showFeedback(feedback, `${error.message} La venta no fue registrada.`, true);
     }
