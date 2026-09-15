@@ -263,15 +263,42 @@
                 <fieldset>
                     <legend>Toppings</legend>
                     <div class="edit-toppings">
-                        <div class="edit-topping"><span>Arequipe</span><div class="topping-stepper"><button type="button" class="topping-adjust" data-edit-input="editArequipe" data-delta="-1" aria-label="Disminuir arequipe">−</button><strong id="editArequipeCount">0</strong><button type="button" class="topping-adjust" data-edit-input="editArequipe" data-delta="1" aria-label="Aumentar arequipe">+</button></div></div>
-                        <div class="edit-topping"><span>Leche en polvo</span><div class="topping-stepper"><button type="button" class="topping-adjust" data-edit-input="editPowderedMilk" data-delta="-1" aria-label="Disminuir leche en polvo">−</button><strong id="editPowderedMilkCount">0</strong><button type="button" class="topping-adjust" data-edit-input="editPowderedMilk" data-delta="1" aria-label="Aumentar leche en polvo">+</button></div></div>
-                        <div class="edit-topping"><span>Uvas pasas</span><div class="topping-stepper"><button type="button" class="topping-adjust" data-edit-input="editRaisins" data-delta="-1" aria-label="Disminuir uvas pasas">−</button><strong id="editRaisinsCount">0</strong><button type="button" class="topping-adjust" data-edit-input="editRaisins" data-delta="1" aria-label="Aumentar uvas pasas">+</button></div></div>
+                        <div class="edit-topping"><span>Arequipe</span>
+                            <div class="topping-stepper"><button type="button" class="topping-adjust"
+                                    data-edit-input="editArequipe" data-delta="-1"
+                                    aria-label="Disminuir arequipe">−</button><strong
+                                    id="editArequipeCount">0</strong><button type="button" class="topping-adjust"
+                                    data-edit-input="editArequipe" data-delta="1"
+                                    aria-label="Aumentar arequipe">+</button></div>
+                        </div>
+                        <div class="edit-topping"><span>Leche en polvo</span>
+                            <div class="topping-stepper"><button type="button" class="topping-adjust"
+                                    data-edit-input="editPowderedMilk" data-delta="-1"
+                                    aria-label="Disminuir leche en polvo">−</button><strong
+                                    id="editPowderedMilkCount">0</strong><button type="button" class="topping-adjust"
+                                    data-edit-input="editPowderedMilk" data-delta="1"
+                                    aria-label="Aumentar leche en polvo">+</button></div>
+                        </div>
+                        <div class="edit-topping"><span>Uvas pasas</span>
+                            <div class="topping-stepper"><button type="button" class="topping-adjust"
+                                    data-edit-input="editRaisins" data-delta="-1"
+                                    aria-label="Disminuir uvas pasas">−</button><strong
+                                    id="editRaisinsCount">0</strong><button type="button" class="topping-adjust"
+                                    data-edit-input="editRaisins" data-delta="1"
+                                    aria-label="Aumentar uvas pasas">+</button></div>
+                        </div>
                     </div>
-                    <input id="editArequipe" type="hidden" value="0"><input id="editPowderedMilk" type="hidden" value="0"><input id="editRaisins" type="hidden" value="0">
+                    <input id="editArequipe" type="hidden" value="0"><input id="editPowderedMilk" type="hidden"
+                        value="0"><input id="editRaisins" type="hidden" value="0">
                 </fieldset>
-                <label>Medio de pago<select id="editPaymentMethod" required><option value="EFECTIVO">Efectivo</option><option value="NEQUI">Nequi</option></select></label>
+                <label>Medio de pago<select id="editPaymentMethod" required>
+                        <option value="EFECTIVO">Efectivo</option>
+                        <option value="NEQUI">Nequi</option>
+                    </select></label>
                 <p id="editSaleFeedback" class="feedback" role="status"></p>
-                <div class="modal-actions"><button id="cancelSaleEdit" class="text-button" type="button">Cancelar</button><button class="primary-button" type="submit">Guardar cambios</button></div>
+                <div class="modal-actions"><button id="cancelSaleEdit" class="text-button"
+                        type="button">Cancelar</button><button class="primary-button" type="submit">Guardar
+                        cambios</button></div>
             </form>
         </section>
     </div>
