@@ -161,6 +161,7 @@ public class CremoService {
                     "La actualización de la venta excede el stock disponible");
         }
 
+        inventoryRepository.save(inventory);
         sale = new Sale(product, request.quantity(), request.paymentMethod(), sale.getSellerName(),
                 request.arequipe(), request.powderedMilk(), request.raisins());
         sale.setIdForUpdate(id);
