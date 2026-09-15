@@ -173,7 +173,7 @@ async function loadDashboard() {
     $('unitsValue').textContent = data.todayUnits || 0;
     $('revenueValue').textContent = money(data.todayTotal);
     renderInventory(data.inventory);
-    renderSales(data.recentSales || []);
+    if (!reportQueryString()) renderSales(data.recentSales || []);
 }
 
 async function loadSellerPrice() {
