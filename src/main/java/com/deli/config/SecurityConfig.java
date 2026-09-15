@@ -23,7 +23,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/api/auth/login", "/api/auth/logout", "/api/sales",
-                                "/api/inventory/today", "/api/product/price"))
+                                "/api/sellers", "/api/sellers/**", "/api/inventory/today", "/api/product/price"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/", "/index.html", "/login.html", "/seller.html", "/app.js", "/login.js",
                                 "/seller.js", "/styles.css", "/error")
