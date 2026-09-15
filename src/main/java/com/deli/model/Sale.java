@@ -34,9 +34,9 @@ public class Sale {
     private LocalDate saleDate;
     private LocalDateTime createdAt;
     private String sellerName;
-    private boolean arequipe;
-    private boolean powderedMilk;
-    private boolean raisins;
+    private int arequipe;
+    private int powderedMilk;
+    private int raisins;
     private BigDecimal toppingsTotal;
 
     @Enumerated(EnumType.STRING)
@@ -46,17 +46,17 @@ public class Sale {
     }
 
     public Sale(Product product, int quantity, PaymentMethod paymentMethod, String sellerName) {
-        this(product, quantity, paymentMethod, sellerName, false, false, false);
+        this(product, quantity, paymentMethod, sellerName, 0, 0, 0);
     }
 
     public Sale(Product product, int quantity, PaymentMethod paymentMethod, String sellerName,
-            boolean arequipe, boolean powderedMilk, boolean raisins) {
+            int arequipe, int powderedMilk, int raisins) {
         this.product = product;
         this.quantity = quantity;
-        this.arequipe = arequipe;
-        this.powderedMilk = powderedMilk;
-        this.raisins = raisins;
-        int toppingCount = (arequipe ? 1 : 0) + (powderedMilk ? 1 : 0) + (raisins ? 1 : 0);
+        this.arequipe = Math.max(0, arequipe);
+        this.powderedMilk = Math.max(0, powderedMilk);
+        this.raisins = Math.max(0, raisins);
+        int toppingCount = this.arequipe + this.powderedMilk + this.raisins;
         BigDecimal toppingUnitPrice = TOPPING_PRICE.multiply(BigDecimal.valueOf(toppingCount));
         this.unitPrice = product.getPrice().add(toppingUnitPrice);
         this.total = unitPrice.multiply(BigDecimal.valueOf(quantity));
@@ -104,19 +104,85 @@ public class Sale {
         return paymentMethod;
     }
 
-    public boolean isArequipe() {
+    public int getArequipe() {
         return arequipe;
     }
 
-    public boolean isPowderedMilk() {
+    public int getPowderedMilk() {
         return powderedMilk;
     }
 
-    public boolean isRaisins() {
+    public int getRaisins() {
         return raisins;
+    }
+
+    public String getToppingsSummary() {
+        java.util.List<String> toppings = new java.util.ArrayList<>();
+        if (arequipe > 0) {
+            toppings.add("Arequipe: " + arequipe);
+        }
+        if (powderedMilk > 0) {
+            toppings.add("Leche en polvo: " + powderedMilk);
+        }
+        if (raisins > 0) {
+            toppings.add("Uvas pasas: " + raisins);
+        }
+        return toppings.isEmpty() ? "Sin toppings" : String.join(" | ", toppings);
     }
 
     public BigDecimal getToppingsTotal() {
         return toppingsTotal;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public void setUnitPrice(BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public void setTotal(BigDecimal total) {
+        this.total = total;
+    }
+
+    public void setSaleDate(LocalDate saleDate) {
+        this.saleDate = saleDate;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setSellerName(String sellerName) {
+        this.sellerName = sellerName == null || sellerName.isBlank() ? "No especificado" : sellerName.trim();
+    }
+
+    public void setPaymentMethod(PaymentMethod paymentMethod) {
+        this.paymentMethod = paymentMethod;
+    }
+
+    public void setArequipe(int arequipe) {
+        this.arequipe = Math.max(0, arequipe);
+    }
+
+    public void setPowderedMilk(int powderedMilk) {
+        this.powderedMilk = Math.max(0, powderedMilk);
+    }
+
+    public void setRaisins(int raisins) {
+        this.raisins = Math.max(0, raisins);
+    }
+
+    public void setToppingsTotal(BigDecimal toppingsTotal) {
+        this.toppingsTotal = toppingsTotal;
+    }
+
+    public void setIdForUpdate(Long id) {
+        this.id = id;
     }
 }

@@ -30,12 +30,16 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers("/api/auth/login", "/api/auth/logout", "/api/auth/csrf", "/api/health")
                         .permitAll()
-                        .requestMatchers("/api/auth/me", "/api/product/current", "/api/sales",
-                                "/api/seller/me/stats")
+                        .requestMatchers("/api/auth/me", "/api/product/current", "/api/seller/me/stats")
                         .authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/inventory/today").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/sellers").authenticated()
-                        .requestMatchers("/api/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/sales").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/sales/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/sales/**").authenticated()
+                        .requestMatchers("/api/sellers", "/api/sellers/**", "/api/inventory/today",
+                                "/api/product/price")
+                        .hasRole("ADMIN")
                         .anyRequest().permitAll())
                 .securityContext(context -> context.securityContextRepository(securityContextRepository()));
         return http.build();

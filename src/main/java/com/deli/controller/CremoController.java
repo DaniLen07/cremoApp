@@ -151,6 +151,17 @@ public class CremoController {
         return service.createSale(request, authentication.getName(), admin);
     }
 
+    @PutMapping("/sales/{id}")
+    public Sale updateSale(@PathVariable Long id, @Valid @RequestBody SaleRequest request) {
+        return service.updateSale(id, request);
+    }
+
+    @DeleteMapping("/sales/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteSale(@PathVariable Long id) {
+        service.deleteSale(id);
+    }
+
     @GetMapping("/reports/weekly")
     public Map<String, Object> weeklyReport() {
         return service.weeklyReport();

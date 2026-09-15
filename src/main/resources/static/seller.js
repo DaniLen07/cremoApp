@@ -26,10 +26,35 @@ async function apiRequest(url, options = {}) {
 }
 
 function updateClock() { const now = new Date(); $('currentDate').textContent = now.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }); $('currentTime').textContent = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }); }
-function selectedToppings() { return ['arequipe', 'powderedMilk', 'raisins'].filter(id => $(id).checked).length; }
-function updateTotal() { const quantity = Number($('quantity').value || 0); const toppingsTotal = quantity * selectedToppings() * 500; $('saleToppingsTotal').textContent = toppingsTotal ? ` + ${money(toppingsTotal)} en toppings` : ''; $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal); }
-function renderSales(sales) { $('sellerSales').innerHTML = sales.length ? `<table><thead><tr><th>Fecha</th><th>Hora</th><th>Cantidad</th><th>Medio de pago</th><th>Total</th></tr></thead><tbody>${sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('')}</tbody></table>` : '<p class="empty-state">Aún no tienes ventas registradas.</p>'; }
+function selectedToppings() {
+    return ['arequipe', 'powderedMilk', 'raisins']
+        .reduce((sum, id) => sum + (Number($(id).value) || 0), 0);
+}
+function updateTotal() { const quantity = Number($('quantity').value || 0); const toppingsQty = selectedToppings(); const toppingsTotal = quantity * toppingsQty * 500; $('saleToppingsTotal').textContent = toppingsQty ? ` + ${money(toppingsTotal)} en toppings` : ''; $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal); }
+function toppingsSummary(sale) { const parts = []; if (Number(sale.arequipe) > 0) parts.push(`Arequipe: ${sale.arequipe}`); if (Number(sale.powderedMilk) > 0) parts.push(`Leche: ${sale.powderedMilk}`); if (Number(sale.raisins) > 0) parts.push(`Pasa: ${sale.raisins}`); return parts.length ? parts.join(' · ') : 'Sin toppings'; }
+function renderSales(sales) { $('sellerSales').innerHTML = sales.length ? `<table><thead><tr><th>Fecha</th><th>Hora</th><th>Cantidad</th><th>Medio de pago</th><th>Toppings</th><th>Total</th><th>Acciones</th></tr></thead><tbody>${sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${toppingsSummary(sale)}</td><td>${money(sale.total)}</td><td><button type="button" class="seller-action-button edit-sale" data-id="${sale.id}">Editar</button><button type="button" class="seller-action-button delete-seller" data-id="${sale.id}">Eliminar</button></td></tr>`).join('')}</tbody></table>` : '<p class="empty-state">Aún no tienes ventas registradas.</p>'; }
 async function load() { const user = await (await apiRequest('/api/auth/me')).json(); if (user.role !== 'SELLER') { window.location.replace('/'); return; } $('userLabel').textContent = `${user.username} · Vendedor`; const product = await (await apiRequest('/api/product/current')).json(); currentPrice = Number(product.price); const inventory = await (await apiRequest('/api/inventory/today')).json(); $('availableProduct').textContent = inventory.availableQuantity || 0; const stats = await (await apiRequest('/api/seller/me/stats')).json(); $('todayUnits').textContent = stats.todayUnits; $('todayTotal').textContent = money(stats.todayTotal); $('totalUnits').textContent = stats.totalUnits; $('totalAmount').textContent = money(stats.totalAmount); renderSales(stats.sales); updateTotal(); }
 
-$('saleForm').addEventListener('submit', async event => { event.preventDefault(); try { await apiRequest('/api/sales', { method: 'POST', body: JSON.stringify({ quantity: Number($('quantity').value), paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value, sellerName: 'self', arequipe: $('arequipe').checked, powderedMilk: $('powderedMilk').checked, raisins: $('raisins').checked }) }); $('quantity').value = 1; $('arequipe').checked = false; $('powderedMilk').checked = false; $('raisins').checked = false; $('saleFeedback').textContent = 'Venta registrada correctamente.'; await load(); } catch (error) { $('saleFeedback').textContent = error.message; $('saleFeedback').classList.add('error'); } });
+$('saleForm').addEventListener('submit', async event => { event.preventDefault(); try { await apiRequest('/api/sales', { method: 'POST', body: JSON.stringify({ quantity: Number($('quantity').value), paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value, sellerName: 'self', arequipe: Number($('arequipe').value) || 0, powderedMilk: Number($('powderedMilk').value) || 0, raisins: Number($('raisins').value) || 0 }) }); $('quantity').value = 1; $('arequipe').value = 0; $('powderedMilk').value = 0; $('raisins').value = 0; $('saleFeedback').textContent = 'Venta registrada correctamente.'; await load(); } catch (error) { $('saleFeedback').textContent = error.message; $('saleFeedback').classList.add('error'); } });
+
+$('sellerSales').addEventListener('click', async event => {
+    const editButton = event.target.closest('.edit-sale');
+    const deleteButton = event.target.closest('.delete-seller');
+    if (editButton) {
+        const sale = (await (await apiRequest('/api/seller/me/stats')).json()).sales.find(item => String(item.id) === String(editButton.dataset.id));
+        const quantity = Number(prompt('Cantidad de unidades', sale?.quantity ?? 1));
+        if (!Number.isFinite(quantity) || quantity < 1) return;
+        const arequipe = Number(prompt('Cantidad de arequipe', sale?.arequipe ?? 0));
+        const powderedMilk = Number(prompt('Cantidad de leche en polvo', sale?.powderedMilk ?? 0));
+        const raisins = Number(prompt('Cantidad de uvas pasas', sale?.raisins ?? 0));
+        const paymentMethod = prompt('Medio de pago (EFECTIVO/NEQUI)', sale?.paymentMethod ?? 'EFECTIVO');
+        await apiRequest(`/api/sales/${editButton.dataset.id}`, { method: 'PUT', body: JSON.stringify({ quantity, paymentMethod, sellerName: sale?.sellerName || 'self', arequipe, powderedMilk, raisins }) });
+        await load();
+        return;
+    }
+    if (deleteButton && window.confirm('¿Eliminar esta venta?')) {
+        await apiRequest(`/api/sales/${deleteButton.dataset.id}`, { method: 'DELETE' });
+        await load();
+    }
+});
 $('decreaseQuantity').addEventListener('click', event => { $('quantity').value = Math.max(1, Number($('quantity').value) - 1); updateTotal(); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); }); $('increaseQuantity').addEventListener('click', event => { $('quantity').value = Number($('quantity').value) + 1; updateTotal(); event.currentTarget.classList.add('is-active'); setTimeout(() => event.currentTarget.classList.remove('is-active'), 150); }); $('quantity').addEventListener('input', updateTotal);['arequipe', 'powderedMilk', 'raisins'].forEach(id => $(id).addEventListener('change', updateTotal)); $('logoutButton').addEventListener('click', async () => { try { await apiRequest('/api/auth/logout', { method: 'POST' }); } finally { window.location.replace('/login.html'); } }); updateClock(); setInterval(updateClock, 30000); load().catch(() => window.location.replace('/login.html')); setInterval(() => load().catch(() => { }), 15000);

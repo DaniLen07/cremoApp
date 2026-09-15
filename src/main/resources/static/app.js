@@ -76,11 +76,15 @@ function updateClock() {
     $('currentTime').textContent = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
 }
 
-function selectedToppings() { return ['arequipe', 'powderedMilk', 'raisins'].filter(id => $(id).checked).length; }
+function selectedToppings() {
+    return ['arequipe', 'powderedMilk', 'raisins']
+        .reduce((sum, id) => sum + (Number($(id).value) || 0), 0);
+}
 function updateSaleTotal() {
     const quantity = Number($('quantity').value || 0);
-    const toppingsTotal = quantity * selectedToppings() * 500;
-    $('saleToppingsTotal').textContent = toppingsTotal ? ` + ${money(toppingsTotal)} en toppings` : '';
+    const toppingsQty = selectedToppings();
+    const toppingsTotal = quantity * toppingsQty * 500;
+    $('saleToppingsTotal').textContent = toppingsQty ? ` + ${money(toppingsTotal)} en toppings` : '';
     $('saleTotal').textContent = money(quantity * currentPrice + toppingsTotal);
 }
 
@@ -100,19 +104,27 @@ function renderInventory(inventory) {
     $('stockMessage').textContent = available ? `${available} unidades listas para vender.` : 'No hay unidades disponibles hoy.';
 }
 
+function toppingsSummary(sale) {
+    const parts = [];
+    if (Number(sale.arequipe) > 0) parts.push(`Arequipe: ${sale.arequipe}`);
+    if (Number(sale.powderedMilk) > 0) parts.push(`Leche: ${sale.powderedMilk}`);
+    if (Number(sale.raisins) > 0) parts.push(`Pasa: ${sale.raisins}`);
+    return parts.length ? parts.join(' · ') : 'Sin toppings';
+}
+
 function renderSales(sales) {
     const table = $('salesTable');
-    if (!sales.length) { table.innerHTML = '<tr><td colspan="6" class="empty-state">Aún no hay ventas registradas.</td></tr>'; return; }
-    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('');
+    if (!sales.length) { table.innerHTML = '<tr><td colspan="7" class="empty-state">Aún no hay ventas registradas.</td></tr>'; return; }
+    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${toppingsSummary(sale)}</td><td>${money(sale.total)}</td><td><button type="button" class="seller-action-button edit-sale" data-id="${sale.id}">Editar</button><button type="button" class="seller-action-button delete-seller" data-id="${sale.id}">Eliminar</button></td></tr>`).join('');
 }
 
 function renderDailySales(sales) {
     const table = $('dailySalesTable');
     if (!sales.length) {
-        table.innerHTML = '<tr><td colspan="6" class="empty-state">Aún no hay ventas registradas hoy.</td></tr>';
+        table.innerHTML = '<tr><td colspan="7" class="empty-state">Aún no hay ventas registradas hoy.</td></tr>';
         return;
     }
-    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${money(sale.total)}</td></tr>`).join('');
+    table.innerHTML = sales.map(sale => `<tr><td>${sale.saleDate}</td><td>${String(sale.createdAt).split('T')[1]?.slice(0, 8) || '--:--:--'}</td><td>${sale.sellerName || 'No especificado'}</td><td>${sale.quantity}</td><td>${sale.paymentMethod}</td><td>${toppingsSummary(sale)}</td><td>${money(sale.total)}</td><td><button type="button" class="seller-action-button edit-sale" data-id="${sale.id}">Editar</button><button type="button" class="seller-action-button delete-seller" data-id="${sale.id}">Eliminar</button></td></tr>`).join('');
 }
 
 async function loadDashboard() {
@@ -261,11 +273,50 @@ $('saleForm').addEventListener('submit', async event => {
     const quantity = Number($('quantity').value);
     const sellerName = $('sellerName').value.trim();
     const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    const arequipe = Number($('arequipe').value) || 0;
+    const powderedMilk = Number($('powderedMilk').value) || 0;
+    const raisins = Number($('raisins').value) || 0;
     try {
-        await apiRequest('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName, arequipe: $('arequipe').checked, powderedMilk: $('powderedMilk').checked, raisins: $('raisins').checked }) });
-        showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = ''; $('arequipe').checked = false; $('powderedMilk').checked = false; $('raisins').checked = false; updateSaleTotal(); await refresh();
+        await apiRequest('/api/sales', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName, arequipe, powderedMilk, raisins }) });
+        showFeedback(feedback, 'Venta registrada correctamente.'); $('quantity').value = 1; $('sellerName').value = ''; $('arequipe').value = 0; $('powderedMilk').value = 0; $('raisins').value = 0; updateSaleTotal(); await refresh();
     } catch (error) {
         showFeedback(feedback, `${error.message} La venta no fue registrada.`, true);
+    }
+});
+
+async function editSaleById(id) {
+    const row = document.querySelector(`.edit-sale[data-id="${id}"]`)?.closest('tr');
+    if (!row) return;
+    const sale = (await (await apiRequest('/api/reports/daily')).json()).sales.find(item => String(item.id) === String(id)) ||
+        (await (await apiRequest('/api/reports/weekly')).json()).sales.find(item => String(item.id) === String(id));
+    const quantity = Number(prompt('Cantidad de unidades', sale?.quantity ?? 1));
+    if (!Number.isFinite(quantity) || quantity < 1) return;
+    const arequipe = Number(prompt('Cantidad de arequipe', sale?.arequipe ?? 0));
+    const powderedMilk = Number(prompt('Cantidad de leche en polvo', sale?.powderedMilk ?? 0));
+    const raisins = Number(prompt('Cantidad de uvas pasas', sale?.raisins ?? 0));
+    const paymentMethod = prompt('Medio de pago (EFECTIVO/NEQUI)', sale?.paymentMethod ?? 'EFECTIVO');
+    const sellerName = prompt('Vendedor', sale?.sellerName ?? 'No especificado');
+    await apiRequest(`/api/sales/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ quantity, paymentMethod, sellerName, arequipe, powderedMilk, raisins }) });
+    await refresh();
+}
+
+$('salesTable').addEventListener('click', async event => {
+    const editButton = event.target.closest('.edit-sale');
+    const deleteButton = event.target.closest('.delete-seller');
+    if (editButton) { await editSaleById(editButton.dataset.id); return; }
+    if (deleteButton && window.confirm('¿Eliminar esta venta?')) {
+        await apiRequest(`/api/sales/${deleteButton.dataset.id}`, { method: 'DELETE' });
+        await refresh();
+    }
+});
+
+$('dailySalesTable').addEventListener('click', async event => {
+    const editButton = event.target.closest('.edit-sale');
+    const deleteButton = event.target.closest('.delete-seller');
+    if (editButton) { await editSaleById(editButton.dataset.id); return; }
+    if (deleteButton && window.confirm('¿Eliminar esta venta?')) {
+        await apiRequest(`/api/sales/${deleteButton.dataset.id}`, { method: 'DELETE' });
+        await refresh();
     }
 });
 

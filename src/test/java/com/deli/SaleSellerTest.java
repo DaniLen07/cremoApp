@@ -14,7 +14,7 @@ class SaleSellerTest {
 
     @Test
     void saleRequestIncludesSellerName() {
-        SaleRequest request = new SaleRequest(3, PaymentMethod.EFECTIVO, "Daniel");
+        SaleRequest request = new SaleRequest(3, PaymentMethod.EFECTIVO, "Daniel", 0, 0, 0);
 
         assertEquals("Daniel", request.sellerName());
     }
@@ -22,10 +22,10 @@ class SaleSellerTest {
     @Test
     void saleTotalIncludesSelectedToppingsPerUnit() {
         Sale sale = new Sale(new Product("Arroz con leche", new BigDecimal("5000")), 2,
-                PaymentMethod.EFECTIVO, "Daniel", true, false, true);
+                PaymentMethod.EFECTIVO, "Daniel", 2, 1, 0);
 
-        assertEquals(0, sale.getUnitPrice().compareTo(new BigDecimal("6000")));
-        assertEquals(0, sale.getTotal().compareTo(new BigDecimal("12000")));
-        assertEquals(0, sale.getToppingsTotal().compareTo(new BigDecimal("2000")));
+        assertEquals(0, sale.getUnitPrice().compareTo(new BigDecimal("6500")));
+        assertEquals(0, sale.getTotal().compareTo(new BigDecimal("13000")));
+        assertEquals(0, sale.getToppingsTotal().compareTo(new BigDecimal("3000")));
     }
 }

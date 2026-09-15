@@ -76,6 +76,9 @@ public class CremoService {
                 .orElseGet(() -> new DailyInventory(product, today, request.quantity()));
         inventory.setInitialQuantity(request.quantity());
         inventory.setAvailableQuantity(request.quantity());
+        inventory.setArequipeQuantity(request.arequipeQuantity());
+        inventory.setPowderedMilkQuantity(request.powderedMilkQuantity());
+        inventory.setRaisinsQuantity(request.raisinsQuantity());
         return inventoryRepository.save(inventory);
     }
 
@@ -105,10 +108,72 @@ public class CremoService {
         if (inventory.getAvailableQuantity() < request.quantity()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay inventario suficiente para esta venta");
         }
+        if (inventory.getArequipeQuantity() < request.arequipe()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay arequipe disponible para esta venta");
+        }
+        if (inventory.getPowderedMilkQuantity() < request.powderedMilk()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "No hay leche en polvo disponible para esta venta");
+        }
+        if (inventory.getRaisinsQuantity() < request.raisins()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay uvas pasas disponibles para esta venta");
+        }
         inventory.setAvailableQuantity(inventory.getAvailableQuantity() - request.quantity());
+        inventory.setArequipeQuantity(inventory.getArequipeQuantity() - request.arequipe());
+        inventory.setPowderedMilkQuantity(inventory.getPowderedMilkQuantity() - request.powderedMilk());
+        inventory.setRaisinsQuantity(inventory.getRaisinsQuantity() - request.raisins());
         inventoryRepository.save(inventory);
         return saleRepository.save(new Sale(product, request.quantity(), request.paymentMethod(), sellerName,
                 request.arequipe(), request.powderedMilk(), request.raisins()));
+    }
+
+    @Transactional
+    public Sale updateSale(Long id, SaleRequest request) {
+        Sale sale = saleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
+
+        Product product = getProduct();
+        DailyInventory inventory = getTodayInventory();
+
+        int previousArequipe = sale.getArequipe();
+        int previousPowderedMilk = sale.getPowderedMilk();
+        int previousRaisins = sale.getRaisins();
+        int previousQuantity = sale.getQuantity();
+
+        int quantityDelta = request.quantity() - previousQuantity;
+        if (quantityDelta > 0 && inventory.getAvailableQuantity() < quantityDelta) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No hay inventario suficiente para esta venta");
+        }
+
+        inventory.setAvailableQuantity(inventory.getAvailableQuantity() - quantityDelta);
+        inventory.setArequipeQuantity(inventory.getArequipeQuantity() + previousArequipe - request.arequipe());
+        inventory.setPowderedMilkQuantity(
+                inventory.getPowderedMilkQuantity() + previousPowderedMilk - request.powderedMilk());
+        inventory.setRaisinsQuantity(inventory.getRaisinsQuantity() + previousRaisins - request.raisins());
+
+        if (inventory.getArequipeQuantity() < 0 || inventory.getPowderedMilkQuantity() < 0
+                || inventory.getRaisinsQuantity() < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "La actualización de la venta excede el stock disponible");
+        }
+
+        sale = new Sale(product, request.quantity(), request.paymentMethod(), sale.getSellerName(),
+                request.arequipe(), request.powderedMilk(), request.raisins());
+        sale.setIdForUpdate(id);
+        return saleRepository.save(sale);
+    }
+
+    @Transactional
+    public void deleteSale(Long id) {
+        Sale sale = saleRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Venta no encontrada"));
+        DailyInventory inventory = getTodayInventory();
+        inventory.setAvailableQuantity(inventory.getAvailableQuantity() + sale.getQuantity());
+        inventory.setArequipeQuantity(inventory.getArequipeQuantity() + sale.getArequipe());
+        inventory.setPowderedMilkQuantity(inventory.getPowderedMilkQuantity() + sale.getPowderedMilk());
+        inventory.setRaisinsQuantity(inventory.getRaisinsQuantity() + sale.getRaisins());
+        inventoryRepository.save(inventory);
+        saleRepository.delete(sale);
     }
 
     public Map<String, Object> dashboard() {
