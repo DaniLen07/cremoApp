@@ -68,6 +68,7 @@ public class CremoService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "No hay producto configurado"));
     }
 
+    @Transactional
     public DailyInventory getTodayInventory() {
         Product product = getProduct();
         LocalDate today = LocalDate.now(COLOMBIA);
@@ -207,6 +208,7 @@ public class CremoService {
                 LocalDateTime.now(COLOMBIA)));
     }
 
+    @Transactional
     public Map<String, Object> dashboard() {
         LocalDate today = LocalDate.now(COLOMBIA);
         DailyInventory inventory = getTodayInventory();
@@ -369,8 +371,4 @@ public class CremoService {
         sellerRepository.save(seller);
     }
 
-    @Transactional
-    public void resetSalesData() {
-        saleRepository.deleteAllInBatch();
-    }
 }
